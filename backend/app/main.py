@@ -16,7 +16,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -34,7 +34,7 @@ async def analyze_dreams(dream: DreamInput):
     except Exception as e:
         import traceback
         print(traceback.format_exc())
-        return HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/dreams/{dream_id}/polish", response_model=SMARTGoal)
 async def polish_dream(dream_id: str):
@@ -66,6 +66,17 @@ async def get_roadmap(dream_id: str, age: int = 30):
         analysis_service.generate_roadmap(dream, age),
         media_type="application/json"
     )
+
+@app.get("/galaxy/points")
+async def get_galaxy_points():
+    try:
+        dreams = storage_service.get_all_dreams()
+        points = analysis_service.get_galaxy_points(dreams)
+        return points
+    except Exception as e:
+        import traceback
+        print(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/search")
 async def search_dreams(q: str = Query(..., min_length=1)):

@@ -60,5 +60,12 @@ export const api = {
             throw new Error(error.detail || "Analysis failed");
         }
         return res.json();
+    },
+    galaxy: {
+        points: async (): Promise<any[]> => {
+            const res = await fetch(`${API_BASE_URL}/galaxy/points`, { cache: 'no-store' });
+            if (!res.ok) throw new Error("Failed to fetch galaxy points");
+            return res.json();
+        }
     }
 };

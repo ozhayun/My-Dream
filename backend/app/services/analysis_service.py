@@ -2,11 +2,14 @@ import re
 from ..models import DreamInput, DreamCollection, DreamEntry, SMARTGoal, Milestone
 import os
 import json
+import numpy as np
 from dotenv import load_dotenv
 from langchain_ollama import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
-from typing import AsyncGenerator
+from typing import AsyncGenerator, List, Dict, Any
+from sentence_transformers import SentenceTransformer
+from sklearn.decomposition import PCA
 
 load_dotenv()
 
@@ -20,6 +23,14 @@ class AnalysisService:
             base_url=self.base_url,
             temperature=0.7
         )
+        
+        # Initialize embedding model lazily or here? 
+        # Using a small, fast model for semantic search/clustering
+        try:
+            self.embedder = SentenceTransformer('all-MiniLM-L6-v2')
+        except Exception as e:
+            print(f"Failed to load SentenceTransformer: {e}")
+            self.embedder = None
 
     async def analyze_dreams(self, input_data: DreamInput) -> DreamCollection:
         parser = JsonOutputParser(pydantic_object=DreamCollection)
@@ -128,5 +139,74 @@ class AnalysisService:
             age=user_age
         )):
             yield chunk.content
+
+    def get_galaxy_points(self, dreams: List[DreamEntry]) -> List[Dict[str, Any]]:
+        if not dreams:
+            return []
+        
+        if not self.embedder:
+            # Fallback if model failed to load
+            return [{
+                "id": d.id,
+                "title": d.title,
+                "category": d.category,
+                "x": np.random.uniform(-10, 10),
+                "y": np.random.uniform(-10, 10),
+                "z": np.random.uniform(-10, 10)
+            } for d in dreams]
+
+        # 1. Prepare texts for embedding
+        texts = [f"{d.category}: {d.title}" for d in dreams]
+        
+        # 2. Generate embeddings
+        embeddings = self.embedder.encode(texts)
+        
+        # 3. Dimensionality Reduction (PCA to 3D)
+        n_samples = len(dreams)
+        if n_samples > 1:
+            try:
+                # Use as many components as possible up to 3
+                n_comp = min(3, n_samples - 1)
+                pca = PCA(n_components=n_comp)
+                reduced = pca.fit_transform(embeddings)
+                
+                # Pad with zeros if we have fewer than 3 components
+                if reduced.shape[1] < 3:
+                    padding = np.zeros((n_samples, 3 - reduced.shape[1]))
+                    reduced = np.hstack([reduced, padding])
+            except Exception as e:
+                print(f"PCA logic failed, falling back to random: {e}")
+                reduced = np.random.uniform(-5, 5, (n_samples, 3))
+        else:
+            # Single dream centered at origin
+            reduced = np.zeros((n_samples, 3))
+
+        # 4. Map back to JSON structure
+        MAX_GALAXY_RADIUS = 50.0
+        results = []
+        
+        # Calculate max distance for normalization
+        max_dist = 0.0
+        for coords in reduced:
+            dist = np.linalg.norm(coords)
+            if dist > max_dist:
+                max_dist = dist
+        
+        # Scale to fit within MAX_GALAXY_RADIUS
+        scale_factor = (MAX_GALAXY_RADIUS / max_dist) if max_dist > 0.01 else 1.0
+
+        for i, d in enumerate(dreams):
+            coords = reduced[i]
+            results.append({
+                "id": str(d.id),
+                "title": str(d.title),
+                "category": str(d.category),
+                "completed": bool(d.completed),
+                "x": float(coords[0] * scale_factor),
+                "y": float(coords[1] * scale_factor),
+                "z": float(coords[2] * scale_factor)
+            })
+            
+        return results
 
 analysis_service = AnalysisService()

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Sparkles, List, Info, Menu, X, Plus } from "lucide-react";
+import { Sparkles, List, Info, Menu, X, Plus, Map } from "lucide-react";
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { usePathname } from "next/navigation";
@@ -72,6 +72,12 @@ export function Header() {
            <List className="w-4 h-4" /> My List
         </Link>
         <Link 
+          href="/galaxy" 
+          className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2"
+        >
+           <Map className="w-4 h-4 text-primary" /> Galaxy
+        </Link>
+        <Link 
           href="/about"
           className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2"
         >
@@ -112,6 +118,14 @@ export function Header() {
                 >
                     <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400"><List className="w-4 h-4" /></div>
                     <span className="font-medium">My List</span>
+                </Link>
+                <Link 
+                    href="/galaxy" 
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors"
+                >
+                    <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary"><Map className="w-4 h-4" /></div>
+                    <span className="font-medium">Dream Galaxy</span>
                 </Link>
                 <Link 
                     href="/about"

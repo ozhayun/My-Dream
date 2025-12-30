@@ -39,7 +39,7 @@
     "title": "Little Free Library Steward",
     "category": "Other",
     "suggested_target_year": 2030,
-    "completed": true
+    "completed": false
   },
   {
     "id": "5201140d-e9ff-4c73-8a5b-0911cf6dd95a",
@@ -53,7 +53,7 @@
     "title": "Girls' Weekend Getaway",
     "category": "Travel & Adventure",
     "suggested_target_year": 2030,
-    "completed": true
+    "completed": false
   },
   {
     "id": "a20806fe-bd25-487f-86c2-32528c752a83",
@@ -119,7 +119,7 @@
     "title": "Own Home by 2025",
     "category": "Finance & Wealth",
     "suggested_target_year": 2028,
-    "completed": false,
+    "completed": true,
     "is_polished": true,
     "smart_data": {
       "specific": "Purchase and own a single-family home in a desired location.",
@@ -155,7 +155,7 @@
     "title": "Marathon by 2028",
     "category": "Health & Wellness",
     "suggested_target_year": 2028,
-    "completed": false
+    "completed": true
   },
   {
     "id": "1",
@@ -310,7 +310,7 @@
     "title": "Startup Tech Company",
     "category": "Travel & Adventure",
     "suggested_target_year": 2028,
-    "completed": true
+    "completed": false
   },
   {
     "id": "9059bf9f-a983-4fca-bbc2-fa4264d89754",
