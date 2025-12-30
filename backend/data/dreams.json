@@ -44,7 +44,7 @@
   {
     "id": "5201140d-e9ff-4c73-8a5b-0911cf6dd95a",
     "title": "Art Class Enthusiast",
-    "category": "Skills & Knowledge",
+    "category": "Lifestyle & Hobbies",
     "suggested_target_year": 2030,
     "completed": false
   },
@@ -59,13 +59,6 @@
     "id": "a20806fe-bd25-487f-86c2-32528c752a83",
     "title": "Local Park Connoisseur",
     "category": "Lifestyle & Hobbies",
-    "suggested_target_year": 2030,
-    "completed": false
-  },
-  {
-    "id": "244be72f-3ac6-4d51-8e3e-6789ceb184ac",
-    "title": "Chopstick Master",
-    "category": "Skills & Knowledge",
     "suggested_target_year": 2030,
     "completed": false
   },
@@ -86,7 +79,7 @@
   {
     "id": "9f417cec-0339-4af1-94f8-a0f5db05c1ad",
     "title": "Signature Dish",
-    "category": "Lifestyle & Hobbies",
+    "category": "Relationships & Family",
     "suggested_target_year": 2030,
     "completed": false
   },
@@ -99,17 +92,63 @@
   },
   {
     "id": "896e6f05-1030-4dd1-8781-9e4ff553075e",
-    "title": "Pull-up Prodigy",
+    "title": "a",
     "category": "Health & Wellness",
     "suggested_target_year": 2032,
-    "completed": false
+    "completed": false,
+    "is_polished": true,
+    "smart_data": {
+      "specific": "",
+      "measurable": "",
+      "achievable": "",
+      "relevant": "",
+      "time_bound": "",
+      "polished_title": ""
+    },
+    "journal_entries": [
+      {
+        "id": "00im8ni3k",
+        "content": "eat",
+        "created_at": "2025-12-30T06:36:46.443Z",
+        "updated_at": null
+      }
+    ]
   },
   {
     "id": "Buying a house",
-    "title": "Own a Home by 2025",
+    "title": "Own Home by 2025",
     "category": "Finance & Wealth",
     "suggested_target_year": 2028,
-    "completed": false
+    "completed": false,
+    "is_polished": true,
+    "smart_data": {
+      "specific": "Purchase and own a single-family home in a desired location.",
+      "measurable": "The dream will be achieved when the homeowner has complete ownership of the property and all mortgage payments are up to date for at least 12 consecutive months.",
+      "achievable": "The goal is achievable by creating a dedicated savings plan, increasing income through career advancement or side hustles, and maintaining a stable credit score.",
+      "relevant": "Achieving homeownership aligns with personal values of stability, security, and long-term financial growth.",
+      "time_bound": "By December 31, 2025",
+      "polished_title": "Own Home by 2025"
+    },
+    "milestones": [
+      {
+        "id": "own-home-1",
+        "title": "Save 20% of income for 2 years",
+        "target_year": 2026,
+        "completed": false
+      },
+      {
+        "id": "own-home-2",
+        "title": "Get pre-approved mortgage with good credit score",
+        "target_year": 2027,
+        "completed": false
+      },
+      {
+        "id": "own-home-3",
+        "title": "Find a suitable neighborhood and start house hunting",
+        "target_year": 2028,
+        "completed": false
+      }
+    ]
   },
   {
     "id": "Run a marathon",
@@ -148,10 +187,60 @@
   },
   {
     "id": "ef2e60b3-a2b4-4cbc-a64d-eef9de62d2bc",
-    "title": "Achieve financial sovereignty",
+    "title": "Financial Independence in 5 Years",
     "category": "Finance & Wealth",
     "suggested_target_year": 2034,
-    "completed": false
+    "completed": false,
+    "notes": "hey ther\n",
+    "is_polished": true,
+    "smart_data": {
+      "specific": "attain financial independence through strategic investments and wealth management",
+      "measurable": "achieve a minimum of $1,000,000 in net worth within 5 years",
+      "achievable": "establish a monthly savings plan of 20% of income, increase income by 10% annually",
+      "relevant": "enables freedom from debt, financial stress, and career uncertainty",
+      "time_bound": "by the end of year 5",
+      "polished_title": "Financial Independence in 5 Years"
+    },
+    "milestones": [
+      {
+        "id": "financial-stability-1",
+        "title": "Pay off all high-interest debts and eliminate credit card balances",
+        "target_year": 2027,
+        "completed": true
+      },
+      {
+        "id": "wealth-acceleration-2",
+        "title": "Invest in a tax-efficient retirement account with employer matching contributions",
+        "target_year": 2030,
+        "completed": false
+      },
+      {
+        "id": "asset-building-3",
+        "title": "Save $250,000 for a down payment on a primary residence",
+        "target_year": 2029,
+        "completed": false
+      },
+      {
+        "id": "income-enhancement-4",
+        "title": "Secure a side hustle or freelance income stream that generates an additional $50,000/year",
+        "target_year": 2031,
+        "completed": false
+      },
+      {
+        "id": "financial-independence-5",
+        "title": "Achieve net worth of at least $1 million by investing in low-cost index funds and dividend-paying stocks",
+        "target_year": 2034,
+        "completed": false
+      }
+    ],
+    "journal_entries": [
+      {
+        "id": "tjz19nv8x",
+        "content": "\ud83d\udea9 Milestone Achieved: Pay off all high-interest debts and eliminate credit card balances",
+        "created_at": "2025-12-30T07:32:43.462Z",
+        "updated_at": null
+      }
+    ]
   },
   {
     "id": "396d4a00-781b-411b-987b-28babd930afa",
@@ -168,18 +257,53 @@
     "completed": false
   },
   {
-    "id": "1c9d9657-a681-4804-8df4-3251bd0eada0",
-    "title": "Create a masterpiece",
-    "category": "Skills & Knowledge",
-    "suggested_target_year": 2032,
-    "completed": false
-  },
-  {
     "id": "0aa23aba-7687-4b7f-92aa-2b27c1004165",
-    "title": "Achieve financial sovereignty",
+    "title": "Financial Independence Within 2 Years",
     "category": "Finance & Wealth",
     "suggested_target_year": 2033,
-    "completed": false
+    "completed": false,
+    "is_polished": true,
+    "smart_data": {
+      "specific": "achieve complete control over personal finances, including saving, investing, and debt management",
+      "measurable": "reduce monthly expenses by 20% within the next 6 months through strategic budgeting and cost-cutting measures",
+      "achievable": "set aside $1,000 per month for emergency funds, increase income by 10%, and reduce household debt by 30%",
+      "relevant": "regain independence from financial stress and achieve long-term financial stability",
+      "time_bound": "within the next 18 months through consistent effort and smart financial decisions",
+      "polished_title": "Financial Independence Within 2 Years"
+    },
+    "journal_entries": [],
+    "milestones": [
+      {
+        "id": "financial-sovereignty-milestone-1",
+        "title": "Increase income by 50% through career advancement and side hustles",
+        "target_year": 2028,
+        "completed": false
+      },
+      {
+        "id": "financial-sovereignty-milestone-2",
+        "title": "Pay off all high-interest debts and achieve financial independence",
+        "target_year": 2030,
+        "completed": false
+      },
+      {
+        "id": "financial-sovereignty-milestone-3",
+        "title": "Build an emergency fund covering 12 months of living expenses",
+        "target_year": 2029,
+        "completed": false
+      },
+      {
+        "id": "financial-sovereignty-milestone-4",
+        "title": "Invest in a diversified portfolio and start building wealth through compound interest",
+        "target_year": 2032,
+        "completed": false
+      },
+      {
+        "id": "financial-sovereignty-milestone-5",
+        "title": "Achieve net worth of $1 million by age 35",
+        "target_year": 2033,
+        "completed": false
+      }
+    ]
   },
   {
     "id": "a749d8fe-2280-49db-8dac-2e9029529dff",

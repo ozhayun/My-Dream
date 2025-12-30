@@ -1,3 +1,4 @@
+import { searchDreamsAction } from "../actions";
 import { api } from "@/services/api";
 import { DreamNavBar } from "@/components/DreamNavBar";
 import { Suspense } from "react";
@@ -6,8 +7,17 @@ import { ClientCategoryDashboard } from "./client-dashboard";
 
 export const dynamic = 'force-dynamic';
 
-export default async function DashboardPage() {
-  const dreams = await api.dreams.list();
+export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
+  const { q } = await searchParams;
+  let dreams;
+  
+  if (q) {
+    const searchResults = await searchDreamsAction(q);
+    dreams = searchResults.map((r: any) => r.dream);
+  } else {
+    dreams = await api.dreams.list();
+  }
+
 
   return (
     <div className="container mx-auto px-4 py-24 min-h-screen max-w-7xl">
@@ -15,7 +25,7 @@ export default async function DashboardPage() {
        
        <div className="min-h-[500px]">
           <Suspense fallback={<div className="flex justify-center"><Loader2 className="animate-spin" /></div>}>
-              <ClientCategoryDashboard dreams={dreams} />
+              <ClientCategoryDashboard dreams={dreams} isSearch={!!q} />
           </Suspense>
        </div>
     </div>      

@@ -1,45 +1,31 @@
 "use client";
 
+import { useState } from "react";
+
 import { DreamEntry } from "@/types/dream";
 import { DreamTimeline } from "@/components/DreamTimeline";
-import { useState } from "react";
-import { EditDreamModal } from "@/components/EditDreamModal";
 import { useRouter } from "next/navigation";
+import { api } from "@/services/api";
 
 export function ClientTimelineWrapper({ dreams }: { dreams: DreamEntry[] }) {
     const [localDreams, setLocalDreams] = useState(dreams);
-    const [editingDream, setEditingDream] = useState<DreamEntry | null>(null);
     const router = useRouter();
 
-    const handleSave = async (id: string, updates: Partial<DreamEntry>) => {
-        setLocalDreams(prev => prev.map(d => d.id === id ? { ...d, ...updates } : d));
+    const handleToggleStatus = async (id: string, completed: boolean) => {
+        setLocalDreams(prev => prev.map(d => d.id === id ? { ...d, completed } : d));
         try {
-            await fetch(`/api/dreams/${id}`, {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(updates),
-            });
+            await api.dreams.update(id, { completed });
             router.refresh();
         } catch (error) {
-            console.error("Failed to save edit", error);
+            console.error("Failed to update dream status", error);
         }
     };
 
     return (
-        <>
-            <DreamTimeline 
-                dreams={localDreams} 
-                onDreamClick={(dream) => setEditingDream(dream)}
-            />
-
-            {editingDream && (
-                <EditDreamModal 
-                    dream={editingDream} 
-                    open={!!editingDream} 
-                    onOpenChange={(open) => !open && setEditingDream(null)}
-                    onSave={handleSave}
-                />
-            )}
-        </>
+        <DreamTimeline 
+            dreams={localDreams} 
+            onDreamClick={(dream) => router.push(`/dreams/detail/${dream.id}`)}
+            onToggleStatus={handleToggleStatus}
+        />
     );
 }

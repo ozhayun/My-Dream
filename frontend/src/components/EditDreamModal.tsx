@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2 } from "lucide-react";
+import { Loader2, Sparkles, Map as MapIcon } from "lucide-react";
 
 interface EditDreamModalProps {
   dream: DreamEntry;
@@ -97,6 +97,21 @@ export function EditDreamModal({ dream, open, onOpenChange, onSave }: EditDreamM
               </div>
           </div>
           
+          {dream.is_polished && dream.smart_data && (
+            <div className="p-4 bg-primary/5 rounded-xl border border-primary/10 space-y-3">
+              <h4 className="text-xs font-bold text-primary uppercase tracking-widest flex items-center gap-2">
+                <Sparkles className="w-3 h-3" /> SMART Goal Analysis
+              </h4>
+              <div className="grid grid-cols-1 gap-2 text-[11px]">
+                 <p><span className="font-semibold text-primary">Specific:</span> {dream.smart_data.specific}</p>
+                 <p><span className="font-semibold text-primary">Measurable:</span> {dream.smart_data.measurable}</p>
+                 <p><span className="font-semibold text-primary">Achievable:</span> {dream.smart_data.achievable}</p>
+                 <p><span className="font-semibold text-primary">Relevant:</span> {dream.smart_data.relevant}</p>
+                 <p><span className="font-semibold text-primary">Time-bound:</span> {dream.smart_data.time_bound}</p>
+              </div>
+            </div>
+          )}
+
           <div className="flex items-center gap-2 pt-2">
              <input 
                 type="checkbox" 
@@ -108,6 +123,25 @@ export function EditDreamModal({ dream, open, onOpenChange, onSave }: EditDreamM
              <Label htmlFor="completed" className="cursor-pointer">Mark as Achieved 🏆</Label>
           </div>
         </div>
+
+        {/* Milestone Section could go here or in a separate tab/view */}
+        {dream.milestones && dream.milestones.length > 0 && (
+          <div className="px-6 pb-6">
+            <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
+              <MapIcon className="w-4 h-4" /> Roadmap
+            </h4>
+            <div className="space-y-2">
+              {dream.milestones.map(m => (
+                <div key={m.id} className="flex items-center gap-3 p-2 bg-secondary/30 rounded-lg text-xs">
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                  <span className="flex-1">{m.title}</span>
+                  <span className="text-muted-foreground font-medium">{m.target_year}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSaving}>

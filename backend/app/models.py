@@ -13,6 +13,10 @@ class DreamCategory(str, Enum):
     LIFESTYLE = "Lifestyle & Hobbies"
     OTHER = "Other"
 
+class DreamInput(BaseModel):
+    text: str = Field(description="The user's raw dream text")
+
+
 class Milestone(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     title: str = Field(description="The milestone task or objective")
@@ -20,12 +24,18 @@ class Milestone(BaseModel):
     completed: bool = False
 
 class SMARTGoal(BaseModel):
-    specific: str
-    measurable: str
-    achievable: str
-    relevant: str
-    time_bound: str
-    polished_title: str
+    specific: str = ""
+    measurable: str = ""
+    achievable: str = ""
+    relevant: str = ""
+    time_bound: str = ""
+    polished_title: str = ""
+
+class JournalEntry(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    content: str
+    created_at: str
+    updated_at: Optional[str] = None
 
 class DreamEntry(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
@@ -36,11 +46,15 @@ class DreamEntry(BaseModel):
     is_polished: bool = False
     smart_data: Optional[SMARTGoal] = None
     milestones: List[Milestone] = Field(default_factory=list)
+    journal_entries: List[JournalEntry] = Field(default_factory=list)
+    notes: Optional[str] = None
+
 
 class DreamCollection(BaseModel):
     dreams: List[DreamEntry]
 
 class DreamUpdate(BaseModel):
+    id: Optional[str] = None
     title: Optional[str] = None
     category: Optional[DreamCategory] = None
     suggested_target_year: Optional[int] = None
@@ -48,3 +62,6 @@ class DreamUpdate(BaseModel):
     is_polished: Optional[bool] = None
     smart_data: Optional[SMARTGoal] = None
     milestones: Optional[List[Milestone]] = None
+    journal_entries: Optional[List[JournalEntry]] = None
+    notes: Optional[str] = None
+

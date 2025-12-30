@@ -19,6 +19,11 @@ export const api = {
                 throw error;
             }
         },
+        get: async (id: string): Promise<DreamEntry> => {
+            const res = await fetch(`${API_BASE_URL}/dreams/${id}`, { cache: 'no-store' });
+            if (!res.ok) throw new Error("Failed to fetch dream");
+            return res.json();
+        },
         update: async (id: string, data: Partial<DreamEntry>): Promise<DreamEntry> => {
             const res = await fetch(`${API_BASE_URL}/dreams/${id}`, {
                 method: "PATCH",

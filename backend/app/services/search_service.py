@@ -23,15 +23,13 @@ class SearchService:
         # Generate query embedding
         query_embedding = self.model.encode(query)
 
-        # Generate embeddings for all dreams (in a real app, these should be cached/stored)
-        # For simplicity in this local-first app, we generate them on the fly
-        # Optimization: We could store these in the JSON but for now, this is simpler
+        # Optimization: Batch encode all dreams at once
+        dream_texts = [f"{d.title} {d.category}" for d in dreams]
+        dream_embeddings = self.model.encode(dream_texts)
+
         results = []
-        for dream in dreams:
-            dream_text = f"{dream.title} {dream.category}"
-            dream_embedding = self.model.encode(dream_text)
-            
-            similarity = float(self._cosine_similarity(query_embedding, dream_embedding))
+        for i, dream in enumerate(dreams):
+            similarity = float(self._cosine_similarity(query_embedding, dream_embeddings[i]))
             results.append({
                 "dream": dream,
                 "score": similarity

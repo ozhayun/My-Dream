@@ -7,11 +7,11 @@ import { CheckCircle2, Circle } from "lucide-react";
 
 interface DreamTimelineProps {
     dreams: DreamEntry[];
-    onToggleSort?: () => void;
+    onToggleStatus?: (id: string, completed: boolean) => void;
     onDreamClick?: (dream: DreamEntry) => void;
 }
 
-export function DreamTimeline({ dreams, onDreamClick }: DreamTimelineProps) {
+export function DreamTimeline({ dreams, onDreamClick, onToggleStatus }: DreamTimelineProps) {
     // Group dreams by year
     const groupedDreams = dreams.reduce((acc, dream) => {
         const year = dream.suggested_target_year;
@@ -32,11 +32,11 @@ export function DreamTimeline({ dreams, onDreamClick }: DreamTimelineProps) {
                     <h3 className="text-2xl font-bold mb-6 text-foreground/80">{year}</h3>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {groupedDreams[year].map(dream => (
+                        {groupedDreams[year].sort((a, b) => a.title.localeCompare(b.title)).map(dream => (
                              <div 
                                 key={dream.id} 
                                 className={clsx(
-                                    "p-4 rounded-xl border border-border/40 bg-card/40 backdrop-blur-sm transition-all hover:border-primary/30 cursor-pointer hover:bg-white/5",
+                                    "p-4 rounded-xl border border-border/40 bg-card/40 backdrop-blur-sm transition-all hover:border-primary/30 cursor-pointer hover:bg-white/5 group relative",
                                     dream.completed && "opacity-60 grayscale-[0.5]"
                                 )}
                                 onClick={() => onDreamClick?.(dream)}
@@ -48,9 +48,17 @@ export function DreamTimeline({ dreams, onDreamClick }: DreamTimelineProps) {
                                     )}>
                                         {dream.category}
                                     </span>
-                                    {dream.completed && <CheckCircle2 className="w-4 h-4 text-green-500" />}
+                                    <button 
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onToggleStatus?.(dream.id, !dream.completed);
+                                        }}
+                                        className="p-1 hover:text-primary transition-colors"
+                                    >
+                                        {dream.completed ? <CheckCircle2 className="w-5 h-5 text-green-500" /> : <Circle className="w-5 h-5 text-muted-foreground" />}
+                                    </button>
                                 </div>
-                                <h4 className={clsx("font-medium", dream.completed && "line-through")}>
+                                <h4 className={clsx("font-medium transition-all group-hover:text-primary", dream.completed && "line-through")}>
                                     {dream.title}
                                 </h4>
                              </div>

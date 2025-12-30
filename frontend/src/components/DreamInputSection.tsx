@@ -8,7 +8,7 @@ import { DreamEntry } from "@/types/dream";
 import { useRouter } from "next/navigation";
 import { DreamReviewModal } from "@/components/DreamReviewModal";
 import { DREAM_SUGGESTIONS } from "@/lib/suggestions";
-import { api } from "@/services/api";
+import { createDreamsAction, saveDreamsBatchAction } from "@/app/actions";
 
 export function DreamInputSection() {
     const [dreamText, setDreamText] = useState("");
@@ -19,6 +19,13 @@ export function DreamInputSection() {
     const [isListening, setIsListening] = useState(false);
     const [interimTranscript, setInterimTranscript] = useState("");
     const recognitionRef = useRef<any>(null);
+    const router = useRouter();
+    const [suggestions, setSuggestions] = useState<string[]>([]);
+
+    useEffect(() => {
+        const shuffled = [...DREAM_SUGGESTIONS].sort(() => 0.5 - Math.random());
+        setSuggestions(shuffled.slice(0, 3));
+    }, []);
 
     useEffect(() => {
         if (typeof window !== "undefined" && ("webkitSpeechRecognition" in window || "speechRecognition" in window)) {
@@ -78,18 +85,6 @@ export function DreamInputSection() {
             setIsListening(true);
         }
     };
-    
-    // Select 4 random suggestions on mount to avoid hydration mismatch
-    // or just use stable slice. User asked for "changing between 4".
-    // Better to use useEffect to shuffle so it's random on client.
-    const [suggestions, setSuggestions] = useState<string[]>([]);
-
-    useEffect(() => {
-        const shuffled = [...DREAM_SUGGESTIONS].sort(() => 0.5 - Math.random());
-        setSuggestions(shuffled.slice(0, 3));
-    }, []);
-
-    const router = useRouter();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -99,10 +94,10 @@ export function DreamInputSection() {
         setError("");
 
         try {
-            const data = await api.analyze(dreamText);
+            const dreams = await createDreamsAction(dreamText);
             
-            if (data.dreams && data.dreams.length > 0) {
-                setAnalyzedDreams(data.dreams);
+            if (dreams && dreams.length > 0) {
+                setAnalyzedDreams(dreams);
                 setShowReviewModal(true);
             } else {
                 setError("I couldn't identify any specific dreams. Try being more descriptive.");
@@ -118,13 +113,15 @@ export function DreamInputSection() {
 
     const handleSaveDreams = async (dreamsToSave: DreamEntry[]) => {
         try {
-            await api.dreams.createBatch(dreamsToSave);
+            await saveDreamsBatchAction(dreamsToSave);
             router.push("/dreams");
         } catch (err: any) {
             console.error(err);
             setError("Failed to save your dreams. Please try again.");
         }
     };
+
+
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter' && !e.shiftKey) {

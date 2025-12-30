@@ -3,6 +3,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { DreamEntry, DreamCategory } from "@/types/dream";
 import { DndContext, DragOverlay, useDraggable, useDroppable, DragStartEvent, DragEndEvent } from "@dnd-kit/core";
+import { useRouter } from "next/navigation";
 import { clsx } from "clsx";
 import { createPortal } from "react-dom";
 import { CATEGORY_COLORS } from "@/lib/constants";
@@ -60,7 +61,7 @@ export function DreamKanban({ dreams, onUpdateCategory }: DreamKanbanProps) {
                         category={cat} 
                         dreams={dreams
                             .filter(d => d.category === cat)
-                            .sort((a, b) => b.suggested_target_year - a.suggested_target_year)
+                            .sort((a, b) => a.suggested_target_year - b.suggested_target_year)
                         } 
                       />
                   ))}
@@ -97,7 +98,7 @@ function KanbanColumn({ category, dreams }: { category: string, dreams: DreamEnt
                 <span className="text-xs bg-background/40 px-2 py-0.5 rounded-full opacity-70 font-mono">{dreams.length}</span>
             </div>
 
-            <div className="flex flex-col gap-2 overflow-y-auto max-h-full">
+            <div className="flex flex-col gap-2 overflow-y-auto overflow-x-hidden flex-1 custom-scrollbar pr-1">
                 {dreams.map(dream => (
                     <KanbanCard key={dream.id} dream={dream} />
                 ))}
@@ -107,6 +108,7 @@ function KanbanColumn({ category, dreams }: { category: string, dreams: DreamEnt
 }
 
 function KanbanCard({ dream, isOverlay }: { dream: DreamEntry, isOverlay?: boolean }) {
+    const router = useRouter();
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
         id: dream.id,
     });
@@ -121,13 +123,14 @@ function KanbanCard({ dream, isOverlay }: { dream: DreamEntry, isOverlay?: boole
             style={style}
             {...listeners}
             {...attributes}
+            onClick={() => !isDragging && router.push(`/dreams/detail/${dream.id}`)}
             className={clsx(
                 "p-3 rounded-lg bg-card border border-border/50 shadow-sm text-sm cursor-grab active:cursor-grabbing hover:border-primary/30 group",
                 isDragging && "opacity-30",
                 isOverlay && "scale-105 shadow-xl rotate-2 ring-2 ring-primary z-50 opacity-100 bg-card"
             )}
          >
-            <h4 className="font-medium mb-1 group-hover:text-primary transition-colors">{dream.title}</h4>
+            <h4 className="font-medium mb-1 group-hover:text-primary transition-colors line-clamp-3 text-sm leading-tight">{dream.title}</h4>
             <span className="text-xs text-muted-foreground">{dream.suggested_target_year}</span>
          </div>
     );
