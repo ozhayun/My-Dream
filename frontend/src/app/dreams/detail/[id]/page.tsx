@@ -17,7 +17,7 @@ export default async function DreamDetailPage({
     const dream = await api.dreams.get(id);
     
     return (
-      <div className="container mx-auto px-4 py-24 min-h-screen max-w-5xl">
+      <div className="container mx-auto px-4 py-8 min-h-screen max-w-5xl">
         <Suspense fallback={<div className="flex justify-center p-20"><Loader2 className="animate-spin" /></div>}>
             <ClientDreamDetail initialDream={dream} />
         </Suspense>

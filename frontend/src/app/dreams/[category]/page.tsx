@@ -2,11 +2,8 @@ import { api } from "@/services/api";
 import { DreamNavBar } from "@/components/DreamNavBar";
 import { Suspense } from "react";
 import { Loader2 } from "lucide-react";
-import Link from "next/link";
-import { ClientCategoryDetailWrapper } from "./client-category-detail";
-import { DreamCategory } from "@/types/dream";
-
 import { getCategoryFromSlug } from "@/lib/utils";
+import { ClientCategoryDetailWrapper } from "./client-category-detail";
 
 const CATEGORIES = [
     "Career & Business",
@@ -27,11 +24,10 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
   
   const categoryName = getCategoryFromSlug(category, CATEGORIES) || decodeURIComponent(category);
   
-  // Filter server-side or fetch specialized endpoint if it exists
   const categoryDreams = dreams.filter(d => d.category === categoryName);
 
   return (
-    <div className="container mx-auto px-4 py-24 min-h-screen max-w-7xl">
+    <div className="container mx-auto px-4 py-8 max-w-7xl">
        <DreamNavBar />
        
        <div className="min-h-[500px]">

@@ -10,7 +10,7 @@ export default async function StatusPage() {
   const dreams = await api.dreams.list();
 
   return (
-    <div className="container mx-auto px-4 py-24 min-h-screen max-w-7xl">
+    <div className="container mx-auto px-4 py-8 max-w-7xl">
        <DreamNavBar />
        
        <div className="min-h-[500px]">

@@ -2,7 +2,7 @@ import { Sparkles, Heart, Code } from "lucide-react";
 
 export default function AboutPage() {
   return (
-    <div className="container mx-auto px-4 py-24 min-h-[calc(100vh-4rem)] max-w-4xl relative overflow-hidden">
+    <div className="container mx-auto px-4 py-8 min-h-[calc(100vh-4rem)] max-w-4xl relative overflow-hidden">
       <div className="space-y-12 text-center">
         <div className="space-y-4">
           <h1 className="text-4xl sm:text-6xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
