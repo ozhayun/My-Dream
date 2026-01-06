@@ -31,10 +31,14 @@ async def analyze_dreams(dream: DreamInput):
     try:
         result = await analysis_service.analyze_dreams(dream)
         return result
+    except ConnectionError as e:
+        raise HTTPException(status_code=503, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         import traceback
         print(traceback.format_exc())
-        return HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Unable to analyze dreams. Please try rephrasing your input.")
 
 @app.post("/dreams/{dream_id}/polish", response_model=SMARTGoal)
 async def polish_dream(dream_id: str):
@@ -91,7 +95,7 @@ async def save_dreams_batch(dreams: List[DreamEntry]):
     except Exception as e:
         import traceback
         print(traceback.format_exc())
-        return HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/dreams", response_model=List[DreamEntry])
 async def get_dreams():
@@ -101,7 +105,7 @@ async def get_dreams():
     except Exception as e:
         import traceback
         print(traceback.format_exc())
-        return HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/dreams/{dream_id}", response_model=DreamEntry)
 async def get_dream(dream_id: str):

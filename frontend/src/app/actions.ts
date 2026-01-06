@@ -1,22 +1,34 @@
 "use server";
 
-import { DreamEntry, DreamInput, SMARTGoal } from "@/types/dream";
+import { DreamEntry, SMARTGoal } from "@/types/dream";
 import { revalidatePath } from "next/cache";
 
 const BACKEND_URL = process.env.BACKEND_API_URL || "http://localhost:8000";
 
 export async function createDreamsAction(text: string) {
-    const response = await fetch(`${BACKEND_URL}/analyze`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text }),
-    });
+    try {
+        const response = await fetch(`${BACKEND_URL}/analyze`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text }),
+        });
 
-    if (!response.ok) throw new Error("Failed to analyze dreams");
-    const data = await response.json();
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ detail: response.statusText }));
+            console.error("Backend error:", errorData);
+            throw new Error(errorData.detail || "Unable to analyze your dreams. Please try rephrasing your input.");
+        }
+        const data = await response.json();
 
-    // Note: The caller handles saving the confirmed dreams via createBatch
-    return data.dreams as DreamEntry[];
+        // Note: The caller handles saving the confirmed dreams via createBatch
+        return data.dreams as DreamEntry[];
+    } catch (error: unknown) {
+        console.error("Error analyzing dreams:", error);
+        if (error instanceof Error) {
+            throw error;
+        }
+        throw new Error("Unable to analyze your dreams. Please try rephrasing your input.");
+    }
 }
 
 export async function saveDreamsBatchAction(dreams: DreamEntry[]) {

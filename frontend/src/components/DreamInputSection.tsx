@@ -104,8 +104,10 @@ export function DreamInputSection() {
             }
 
         } catch (err: any) {
-            console.error(err);
-            setError(err.message || "Something went wrong. Please ensure Ollama is running.");
+            // Log full error to console for debugging
+            console.error("Error in handleSubmit:", err);
+            // Show user-friendly error message
+            setError(err.message || "Something went wrong while analyzing your dreams. Please try again.");
         } finally {
             setIsAnalyzing(false);
         }

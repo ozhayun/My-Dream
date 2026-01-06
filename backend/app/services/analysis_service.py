@@ -29,13 +29,107 @@ class AnalysisService:
             Categorize each into one of: Career & Business, Finance & Wealth, Health & Wellness, 
             Relationships & Family, Travel & Adventure, Skills & Knowledge, Lifestyle & Hobbies, Other.
             Assign a realistic target year (current year is 2025).
-            RETURN ONLY JSON.
+            
+            Return a JSON object with this EXACT structure:
+            {{
+              "dreams": [
+                {{
+                  "title": "Dream title here",
+                  "category": "Career & Business",
+                  "suggested_target_year": 2026
+                }}
+              ]
+            }}
+            
+            RETURN ONLY JSON. NO MARKDOWN. NO EXPLANATIONS.
             """),
             ("user", "{text}")
         ])
         chain = prompt | self.llm | parser
-        result = await chain.ainvoke({"text": input_data.text})
-        return DreamCollection(**result)
+        try:
+            result = await chain.ainvoke({"text": input_data.text})
+            return DreamCollection(**result)
+        except Exception as e:
+            # Check if it's a connection error
+            error_str = str(e).lower()
+            if "connection" in error_str or "refused" in error_str or "timeout" in error_str:
+                raise ConnectionError(f"Cannot connect to Ollama at {self.base_url}. Please make sure Ollama is running and the model '{self.model_name}' is available.")
+            # Try to handle malformed LLM output
+            try:
+                # Get raw output and try to transform it
+                raw_chain = prompt | self.llm
+                raw_result = await raw_chain.ainvoke({"text": input_data.text})
+                content = str(raw_result.content) if hasattr(raw_result, 'content') else str(raw_result)
+                content = content.strip()
+                
+                # Remove markdown code blocks if present
+                if content.startswith("```"):
+                    content = re.sub(r'^```(?:json)?\s*', '', content)
+                    content = re.sub(r'\s*```$', '', content)
+                
+                try:
+                    data = json.loads(content)
+                except json.JSONDecodeError:
+                    raise ValueError("LLM returned invalid JSON. Please try rephrasing your input.")
+                
+                # Handle case where LLM returns dreams grouped by category
+                if "dreams" not in data and isinstance(data, dict):
+                    dreams_list = []
+                    for category, items in data.items():
+                        if isinstance(items, list):
+                            for item in items:
+                                if isinstance(item, dict):
+                                    # Normalize the item
+                                    dream = {
+                                        "title": item.get("title", item.get("Title", "")),
+                                        "category": category if category in ["Career & Business", "Finance & Wealth", "Health & Wellness", 
+                                                                           "Relationships & Family", "Travel & Adventure", 
+                                                                           "Skills & Knowledge", "Lifestyle & Hobbies", "Other"] 
+                                                          else "Other",
+                                        "suggested_target_year": item.get("suggested_target_year", 
+                                                                          item.get("target_year", 
+                                                                                  item.get("Target Year", 
+                                                                                          item.get("year", 2026))))
+                                    }
+                                    if dream["title"]:
+                                        dreams_list.append(dream)
+                    data = {"dreams": dreams_list}
+                
+                # Handle case where data is already a list
+                if isinstance(data, list):
+                    data = {"dreams": data}
+                
+                # Ensure all dreams have required fields
+                if "dreams" in data:
+                    valid_dreams = []
+                    for dream in data["dreams"]:
+                        if not isinstance(dream, dict):
+                            continue
+                        # Normalize field names
+                        if "Title" in dream:
+                            dream["title"] = dream.pop("Title")
+                        if "target_year" in dream or "Target Year" in dream:
+                            dream["suggested_target_year"] = dream.pop("target_year", dream.pop("Target Year", 2026))
+                        if "Category" in dream:
+                            dream["category"] = dream.pop("Category")
+                        if "suggested_target_year" not in dream:
+                            dream["suggested_target_year"] = 2026
+                        if "category" not in dream:
+                            dream["category"] = "Other"
+                        # Ensure title exists
+                        if "title" in dream and dream["title"]:
+                            valid_dreams.append(dream)
+                    
+                    if not valid_dreams:
+                        raise ValueError("No valid dreams found in the AI response. Please try rephrasing your input with more specific goals.")
+                    
+                    data["dreams"] = valid_dreams
+                else:
+                    raise ValueError("AI response missing 'dreams' field. Please try rephrasing your input.")
+                
+                return DreamCollection(**data)
+            except Exception as fix_error:
+                raise ValueError("Unable to parse dream analysis. Please try rephrasing your input.")
 
     async def polish_dream(self, dream_title: str) -> SMARTGoal:
         prompt = ChatPromptTemplate.from_messages([

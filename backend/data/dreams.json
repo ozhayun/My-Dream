@@ -325,5 +325,29 @@
     "category": "Skills & Knowledge",
     "suggested_target_year": 2080,
     "completed": false
+  },
+  {
+    "id": "4a0d939d-1f85-4553-a247-5de6f76d4f2e",
+    "title": "Write a nonfiction book",
+    "category": "Skills & Knowledge",
+    "suggested_target_year": 2026,
+    "completed": false,
+    "is_polished": false,
+    "smart_data": null,
+    "milestones": [],
+    "journal_entries": [],
+    "notes": null
+  },
+  {
+    "id": "834173fa-316a-4f94-8cc5-864814c3c91a",
+    "title": "Do a pull-up",
+    "category": "Health & Wellness",
+    "suggested_target_year": 2025,
+    "completed": true,
+    "is_polished": false,
+    "smart_data": null,
+    "milestones": [],
+    "journal_entries": [],
+    "notes": null
   }
 ]
