@@ -1,25 +1,24 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { DreamEntry, DreamCategory } from "@/types/dream";
+import { useState } from "react";
+import { DreamEntry, DreamCategory, Milestone } from "@/types/dream";
 import { useRouter } from "next/navigation";
 import { clsx } from "clsx";
-import { 
-    ArrowLeft, 
-    Sparkles, 
-    Map as MapIcon, 
-    Calendar, 
-    Tag, 
-    CheckCircle2, 
-    Circle, 
-    Save, 
+import {
+    ArrowLeft,
+    Sparkles,
+    Map as MapIcon,
+    Calendar,
+    Tag,
+    CheckCircle2,
+    Circle,
+    Save,
     Loader2,
     Trash2,
     MessageSquare
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { polishDreamAction, updateDreamAction, deleteDreamAction } from "@/app/actions";
-import { CATEGORY_COLORS } from "@/lib/constants";
 import { DeleteConfirmModal } from "@/components/DeleteConfirmModal";
 
 const CATEGORIES: DreamCategory[] = [
@@ -145,7 +144,7 @@ export function ClientDreamDetail({ initialDream }: { initialDream: DreamEntry }
                 // Look for an array, but also check if the AI sent an object like {"milestones": [...]}
                 const startIdx = accumulated.indexOf('[');
                 const endIdx = accumulated.lastIndexOf(']');
-                let validated: any[] = [];
+                let validated: Milestone[] = [];
 
                 if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
                     const jsonStr = accumulated.substring(startIdx, endIdx + 1);
