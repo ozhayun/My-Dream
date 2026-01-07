@@ -1,21 +1,17 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { clsx } from "clsx";
-import { Loader2, Send, Mic, MicOff } from "lucide-react";
+import { Loader2, Send, Mic, MicOff, Clock } from "lucide-react";
 import { DreamEntry } from "@/types/dream";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import { DreamReviewModal } from "@/components/DreamReviewModal";
 import { DREAM_SUGGESTIONS } from "@/lib/suggestions";
 import { createDreamsAction, saveDreamsBatchAction } from "@/app/actions";
-import type {
-  SpeechRecognition,
-  SpeechRecognitionEvent,
-  SpeechRecognitionErrorEvent,
-  WindowWithSpeechRecognition,
-} from "@/types/speech-recognition";
+import { useWhisperRecording } from "@/hooks/useWhisperRecording";
+import { hasReachedLimit } from "@/lib/speakingLimit";
 
 export function DreamInputSection() {
   const { isSignedIn } = useAuth();
@@ -24,14 +20,25 @@ export function DreamInputSection() {
   const [error, setError] = useState("");
   const [analyzedDreams, setAnalyzedDreams] = useState<DreamEntry[]>([]);
   const [showReviewModal, setShowReviewModal] = useState(false);
-  const [isListening, setIsListening] = useState(false);
-  const [interimTranscript, setInterimTranscript] = useState("");
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
-  const isListeningRef = useRef(false);
-  const lastSpeechResultAtRef = useRef<number | null>(null);
-  const noResultTimeoutIdRef = useRef<number | null>(null);
   const router = useRouter();
   const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [showLimitBanner, setShowLimitBanner] = useState(false);
+  const [clientLimitReached, setClientLimitReached] = useState(false);
+
+  const {
+    isRecording,
+    isTranscribing,
+    interimTranscript,
+    error: recordingError,
+    limitReached,
+    startRecording,
+    stopRecording,
+  } = useWhisperRecording();
+
+  // Check limit on client side only (after hydration)
+  useEffect(() => {
+    setClientLimitReached(hasReachedLimit());
+  }, [limitReached]);
 
   useEffect(() => {
     const shuffled = [...DREAM_SUGGESTIONS].sort(() => 0.5 - Math.random());
@@ -39,277 +46,80 @@ export function DreamInputSection() {
   }, []);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    // Check if we're in a secure context (HTTPS or localhost)
-    const isSecureContext =
-      window.isSecureContext ||
-      window.location.protocol === "https:" ||
-      window.location.hostname === "localhost" ||
-      window.location.hostname === "127.0.0.1";
-
-    if ("webkitSpeechRecognition" in window || "speechRecognition" in window) {
-      const windowWithSR = window as unknown as WindowWithSpeechRecognition;
-      const SpeechRecognition =
-        windowWithSR.webkitSpeechRecognition || windowWithSR.speechRecognition;
-
-      if (!SpeechRecognition) return;
-
-      const recognizer = new SpeechRecognition();
-      recognizer.continuous = true;
-      recognizer.interimResults = true;
-      // Use English for better compatibility in production
-      // Hebrew (he-IL) may not be well supported by Google's speech service in all regions
-      recognizer.lang = "en-US";
-      console.log("Speech recognition language:", recognizer.lang);
-
-      recognizer.onstart = () => {
-        console.log("Speech recognition started");
-        isListeningRef.current = true;
-        lastSpeechResultAtRef.current = null;
-        setIsListening(true);
-      };
-
-      recognizer.onaudiostart = () => {
-        console.log("Audio capture started - microphone is working!");
-        // Clear the no-result timeout since we're getting audio
-        if (noResultTimeoutIdRef.current) {
-          window.clearTimeout(noResultTimeoutIdRef.current);
-          noResultTimeoutIdRef.current = null;
-        }
-      };
-
-      recognizer.onsoundstart = () => {
-        console.log("Sound detected!");
-      };
-
-      recognizer.onspeechstart = () => {
-        console.log("Speech detected!");
-      };
-
-      recognizer.onresult = (event: SpeechRecognitionEvent) => {
-        lastSpeechResultAtRef.current = Date.now();
-        console.log("onresult fired!", {
-          resultIndex: event.resultIndex,
-          resultsLength: event.results.length,
-          results: event.results,
-        });
-
-        let finalTranscript = "";
-        let currentInterim = "";
-
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          const result = event.results[i];
-          const transcript = result[0]?.transcript || "";
-          console.log(`Result ${i}:`, {
-            transcript,
-            isFinal: result.isFinal,
-          });
-
-          if (result.isFinal) {
-            finalTranscript += transcript + " ";
-          } else {
-            currentInterim += transcript;
-          }
-        }
-
-        if (finalTranscript.trim()) {
-          setDreamText((prev) => {
-            const newText = (prev.trim() + " " + finalTranscript.trim()).trim();
-            console.log(
-              "Final transcript:",
-              finalTranscript.trim(),
-              "New text:",
-              newText
-            );
-            return newText;
-          });
-          setInterimTranscript("");
-        } else if (currentInterim) {
-          console.log("Interim transcript:", currentInterim);
-          setInterimTranscript(currentInterim);
-        } else {
-          console.log("No transcript found in results");
-        }
-      };
-
-      recognizer.onend = () => {
-        console.log(
-          "Speech recognition ended, isListening:",
-          isListeningRef.current
-        );
-        if (noResultTimeoutIdRef.current) {
-          window.clearTimeout(noResultTimeoutIdRef.current);
-          noResultTimeoutIdRef.current = null;
-        }
-        // If we're still supposed to be listening, restart (continuous mode)
-        if (isListeningRef.current && recognitionRef.current) {
-          console.log("Restarting speech recognition...");
-          try {
-            recognitionRef.current.start();
-          } catch (err) {
-            console.error("Error restarting recognition:", err);
-            isListeningRef.current = false;
-            setIsListening(false);
-            setInterimTranscript("");
-          }
-        } else {
-          isListeningRef.current = false;
-          setIsListening(false);
-          setInterimTranscript("");
-        }
-      };
-
-      recognizer.onerror = (event: SpeechRecognitionErrorEvent) => {
-        console.error(
-          "Speech recognition error:",
-          event.error,
-          "Full event:",
-          event,
-          "Is listening:",
-          isListeningRef.current
-        );
-        setInterimTranscript("");
-        if (noResultTimeoutIdRef.current) {
-          window.clearTimeout(noResultTimeoutIdRef.current);
-          noResultTimeoutIdRef.current = null;
-        }
-
-        // Provide user-friendly error messages
-        let errorMessage = "";
-        let shouldStop = true;
-
-        switch (event.error) {
-          case "not-allowed":
-            errorMessage =
-              "Microphone access denied. Please allow microphone permissions in your browser settings.";
-            break;
-          case "no-speech":
-            // Don't stop on no-speech immediately - this is normal if user pauses
-            // Only stop if we get multiple consecutive no-speech errors
-            console.log("No speech detected, continuing to listen...");
-            shouldStop = false;
-
-            // In production, Chrome sometimes fires no-speech immediately
-            // Wait a bit longer before showing an error
-            if (noResultTimeoutIdRef.current) {
-              window.clearTimeout(noResultTimeoutIdRef.current);
-            }
-            noResultTimeoutIdRef.current = window.setTimeout(() => {
-              if (
-                isListeningRef.current &&
-                lastSpeechResultAtRef.current === null
-              ) {
-                setError(
-                  "No speech detected. Please speak clearly into your microphone. Make sure your microphone is working and not muted."
-                );
-                setTimeout(() => setError(""), 5000);
-              }
-            }, 3000);
-            break;
-          case "network":
-            errorMessage =
-              "Network error connecting to speech service. Please check your internet connection and try again.";
-            break;
-          case "aborted":
-            // User stopped, don't show error
-            shouldStop = false;
-            break;
-          case "audio-capture":
-            errorMessage =
-              "No microphone found. Please connect a microphone and try again.";
-            break;
-          case "service-not-allowed":
-            errorMessage =
-              "Speech recognition service is not available. This might be blocked in your network or region. Please try again later or use typing.";
-            break;
-          default:
-            if (!isSecureContext) {
-              errorMessage =
-                "Speech recognition requires HTTPS. Please access this site over a secure connection.";
-            } else {
-              errorMessage = `Speech recognition error: ${event.error}. This might be a network or service issue. Please try again or use typing.`;
-            }
-        }
-
-        if (shouldStop) {
-          isListeningRef.current = false;
-          setIsListening(false);
-        }
-
-        if (errorMessage) {
-          setError(errorMessage);
-          // Clear error after 7 seconds
-          setTimeout(() => setError(""), 7000);
-        }
-      };
-
-      recognitionRef.current = recognizer;
-    } else if (!isSecureContext) {
-      // Speech recognition not available and not in secure context
-      console.warn(
-        "Speech recognition requires HTTPS in production environments."
-      );
+    if (recordingError) {
+      setError(recordingError);
     }
-  }, []);
+  }, [recordingError]);
 
-  const toggleListening = async () => {
-    if (isListening) {
-      isListeningRef.current = false;
-      lastSpeechResultAtRef.current = null;
-      if (noResultTimeoutIdRef.current) {
-        window.clearTimeout(noResultTimeoutIdRef.current);
-        noResultTimeoutIdRef.current = null;
-      }
-      recognitionRef.current?.stop();
-      setIsListening(false);
-    } else {
-      if (!recognitionRef.current) {
-        setError(
-          "Speech recognition is not supported in this browser. Please use Chrome, Edge, or Safari."
-        );
-        return;
-      }
-
-      try {
-        setError("");
-
-        // Explicitly request microphone permission first
-        // This helps ensure permissions are properly granted in production
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia({
-            audio: true,
-          });
-          // Permission granted, stop the stream immediately (we just needed permission)
-          stream.getTracks().forEach((track) => track.stop());
-          console.log("Microphone permission confirmed");
-        } catch (permError) {
-          console.error("Microphone permission error:", permError);
-          setError(
-            "Microphone access is required. Please allow microphone permissions and try again."
-          );
-          setTimeout(() => setError(""), 5000);
-          return;
+  // Preserve transcript when recording stops (including when limit is reached)
+  useEffect(() => {
+    if (!isRecording && !isTranscribing && interimTranscript.trim()) {
+      // When recording stops, copy interimTranscript to dreamText to preserve it
+      setDreamText((prev) => {
+        // If interimTranscript contains more text, use it
+        if (!prev || interimTranscript.length > prev.length) {
+          return interimTranscript;
         }
+        // Otherwise merge intelligently (avoid duplication)
+        if (prev.includes(interimTranscript)) {
+          return prev; // Old contains new, keep old
+        } else if (interimTranscript.includes(prev)) {
+          return interimTranscript; // New contains old, use new
+        } else {
+          // Merge if different
+          return `${prev} ${interimTranscript}`.trim();
+        }
+      });
+    }
+  }, [isRecording, isTranscribing, interimTranscript]);
 
-        // Small delay to ensure permission is fully processed
-        await new Promise((resolve) => setTimeout(resolve, 100));
+  // Close banner when clicking outside
+  useEffect(() => {
+    if (!showLimitBanner) return;
 
-        // Now start speech recognition
-        recognitionRef.current.start();
-        console.log("Speech recognition start() called");
-        // Note: setIsListening will be set by onstart handler
-      } catch (err) {
-        console.error("Error starting speech recognition:", err);
-        isListeningRef.current = false;
-        setIsListening(false);
-        setError(
-          `Failed to start voice input: ${
-            err instanceof Error ? err.message : "Unknown error"
-          }. Please check microphone permissions and try again.`
-        );
-        setTimeout(() => setError(""), 5000);
+    const handleClickOutside = (e: MouseEvent | TouchEvent) => {
+      const target = e.target as HTMLElement;
+      // Check if click is outside the banner and button
+      if (
+        !target.closest("[data-limit-banner]") &&
+        !target.closest("[data-mic-button]")
+      ) {
+        setShowLimitBanner(false);
       }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, [showLimitBanner]);
+
+  const handleToggleRecording = async () => {
+    // Check if limit is reached - show banner instead of recording
+    if (limitReached || clientLimitReached) {
+      setShowLimitBanner(true);
+      // Hide banner after 4 seconds
+      setTimeout(() => {
+        setShowLimitBanner(false);
+      }, 4000);
+      return;
+    }
+
+    if (isRecording) {
+      try {
+        const finalTranscript = await stopRecording();
+        if (finalTranscript.trim()) {
+          setDreamText(finalTranscript);
+        }
+      } catch {
+        setError("Failed to transcribe audio. Please try again.");
+      }
+    } else {
+      setDreamText(""); // Clear previous text
+      await startRecording();
     }
   };
 
@@ -317,7 +127,6 @@ export function DreamInputSection() {
     e.preventDefault();
     if (!dreamText.trim()) return;
 
-    // Check if user is authenticated - redirect to connect if not
     if (!isSignedIn) {
       router.push("/connect");
       return;
@@ -338,9 +147,6 @@ export function DreamInputSection() {
         );
       }
     } catch (err) {
-      // Log full error to console for debugging
-      console.error("Error in handleSubmit:", err);
-      // Show user-friendly error message
       const errorMessage =
         err instanceof Error
           ? err.message
@@ -374,6 +180,8 @@ export function DreamInputSection() {
     e.target.style.height = `${Math.min(e.target.scrollHeight, 300)}px`;
   };
 
+  const isProcessing = isAnalyzing || isTranscribing;
+
   return (
     <div className="w-full relative">
       <motion.div
@@ -386,55 +194,110 @@ export function DreamInputSection() {
           <form onSubmit={handleSubmit} className="relative">
             <textarea
               value={
-                dreamText +
-                (interimTranscript
-                  ? (dreamText ? " " : "") + interimTranscript
-                  : "")
+                isRecording || isTranscribing
+                  ? interimTranscript || dreamText
+                  : dreamText || interimTranscript
               }
               dir="auto"
               onChange={handleInput}
               onKeyDown={handleKeyDown}
-              readOnly={isListening}
+              readOnly={isRecording || isTranscribing}
               placeholder={
-                isListening
-                  ? "Listening..."
+                isRecording
+                  ? "Listening... (text will appear as you speak)"
+                  : isTranscribing
+                  ? "Transcribing..."
                   : "I want to learn piano, travel to Mars, and build a robot..."
               }
               className={clsx(
-                "w-full bg-transparent border-none focus:ring-0 text-lg placeholder:text-foreground/70/40 resize-none min-h-[80px] max-h-[300px] outline-none pr-28 custom-scrollbar transition-opacity",
-                isListening && "opacity-70"
+                "w-full bg-transparent border-none focus:ring-0 text-lg placeholder:text-foreground/40 resize-none min-h-[80px] max-h-[300px] outline-none pr-28 custom-scrollbar transition-opacity",
+                isRecording && "opacity-90"
               )}
             />
 
-            <div className="absolute bottom-0 right-4 flex gap-2">
-              <button
-                type="button"
-                onClick={toggleListening}
-                className={clsx(
-                  "w-10 h-10 flex items-center justify-center rounded-full transition-all shadow-lg",
-                  isListening
-                    ? "bg-red-500 text-white animate-pulse"
-                    : "bg-secondary/50 text-foreground/70 hover:bg-secondary/80"
-                )}
-                title={isListening ? "Stop Recording" : "Speak your dream"}
-              >
-                {isListening ? (
-                  <MicOff className="w-5 h-5" />
-                ) : (
-                  <Mic className="w-5 h-5" />
-                )}
-              </button>
-              <button
-                type="submit"
-                disabled={isAnalyzing || !dreamText.trim()}
-                className="w-10 h-10 flex items-center justify-center rounded-full bg-primary text-primary-foreground hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-primary/25"
-              >
-                {isAnalyzing ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                ) : (
-                  <Send className="w-5 h-5" />
-                )}
-              </button>
+            <div className="absolute bottom-0 right-4 flex flex-col items-end gap-2">
+              {/* Limit Reached Banner - Only shows on click when limit is reached */}
+              {showLimitBanner && (limitReached || clientLimitReached) && (
+                <>
+                  {/* Backdrop blur overlay for mobile readability */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="fixed inset-0 bg-background/40 backdrop-blur-sm md:backdrop-blur-md -z-10 md:hidden"
+                    onClick={() => setShowLimitBanner(false)}
+                  />
+
+                  {/* Banner */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                    transition={{ duration: 0.2 }}
+                    data-limit-banner
+                    className="relative bg-secondary/30 md:bg-secondary/20 border border-white/20 md:border-white/10 rounded-2xl px-5 py-3 md:px-4 md:py-2.5 shadow-2xl backdrop-blur-xl overflow-hidden pointer-events-auto mb-1 z-50"
+                  >
+                    {/* Glass Grain Effect Overlay */}
+                    <div className="absolute inset-0 pointer-events-none opacity-[0.03] bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
+
+                    <div className="relative z-10 flex items-center gap-3">
+                      <div className="w-7 h-7 md:w-6 md:h-6 rounded-lg bg-orange-500/30 md:bg-orange-500/20 text-orange-400 flex items-center justify-center shrink-0">
+                        <Clock className="w-4 h-4 md:w-3.5 md:h-3.5" />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-sm  font-semibold text-foreground leading-tight">
+                          Daily limit reached
+                        </span>
+                        <span className="text-xs text-foreground/70 md:text-foreground/60 leading-tight">
+                          Resets tomorrow
+                        </span>
+                      </div>
+                    </div>
+                  </motion.div>
+                </>
+              )}
+
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={handleToggleRecording}
+                  disabled={isProcessing}
+                  data-mic-button
+                  className={clsx(
+                    "w-10 h-10 flex items-center justify-center rounded-full transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed",
+                    isRecording
+                      ? "bg-red-500 text-white animate-pulse"
+                      : "bg-secondary/50 text-foreground/70 hover:bg-secondary/80"
+                  )}
+                  title={
+                    isRecording
+                      ? "Stop Recording"
+                      : isTranscribing
+                      ? "Transcribing..."
+                      : "Speak your dream"
+                  }
+                >
+                  {isRecording ? (
+                    <MicOff className="w-5 h-5" />
+                  ) : isTranscribing ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <Mic className="w-5 h-5" />
+                  )}
+                </button>
+                <button
+                  type="submit"
+                  disabled={isProcessing || !dreamText.trim()}
+                  className="w-10 h-10 flex items-center justify-center rounded-full bg-primary text-primary-foreground hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-primary/25"
+                >
+                  {isAnalyzing ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <Send className="w-5 h-5" />
+                  )}
+                </button>
+              </div>
             </div>
           </form>
         </div>

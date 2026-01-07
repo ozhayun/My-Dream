@@ -48,7 +48,7 @@ EXTRACTION GUIDELINES:
    - Relationship milestones, family goals
 
 5. When suggesting target years:
-   - Consider that we are in 2026
+- Consider that we are in 2026
    - Spread multiple goals across different years logically
    - Be realistic about timeframes (some goals take longer)
    - Consider logical sequencing (e.g., save money before buying a house)
