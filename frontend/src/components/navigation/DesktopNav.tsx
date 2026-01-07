@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { List, Info, Plus } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 
 export function DesktopNav() {
   const pathname = usePathname();
@@ -39,11 +39,12 @@ export function DesktopNav() {
 
       {/* Auth Buttons */}
       <SignedOut>
-        <SignInButton mode="modal">
-          <button className="text-sm font-medium px-4 py-2 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
-            Sign In
-          </button>
-        </SignInButton>
+        <Link
+          href="/connect"
+          className="text-sm font-medium px-4 py-2 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+        >
+          Sign In
+        </Link>
       </SignedOut>
       <SignedIn>
         <UserButton

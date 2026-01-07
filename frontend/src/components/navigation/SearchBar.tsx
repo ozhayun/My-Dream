@@ -2,14 +2,25 @@
 
 import { clsx } from "clsx";
 import { Search } from "lucide-react";
+import { useAuth } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 
 interface SearchBarProps {
   isHidden?: boolean;
 }
 
 export function SearchBar({ isHidden = false }: SearchBarProps) {
+  const { isSignedIn } = useAuth();
+  const router = useRouter();
+
   const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
+      if (!isSignedIn) {
+        // Redirect to connect if not authenticated
+        e.preventDefault();
+        router.push("/connect");
+        return;
+      }
       const query = (e.target as HTMLInputElement).value;
       if (query.trim()) {
         window.location.href = `/dreams?q=${encodeURIComponent(query)}`;

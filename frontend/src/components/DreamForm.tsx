@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DreamCategory } from "@/types/dream";
 import { saveDream } from "@/app/actions";
+import { useAuth } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 
 const DREAM_CATEGORIES: DreamCategory[] = [
@@ -24,6 +26,8 @@ interface DreamFormProps {
 }
 
 export function DreamForm({ onSuccess }: DreamFormProps) {
+  const { isSignedIn } = useAuth();
+  const router = useRouter();
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState<DreamCategory | null>(null);
   const [targetYear, setTargetYear] = useState<number>(
@@ -34,9 +38,15 @@ export function DreamForm({ onSuccess }: DreamFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!title.trim()) {
       setError("Please enter a dream title");
+      return;
+    }
+
+    // Check if user is authenticated - redirect to connect if not
+    if (!isSignedIn) {
+      router.push("/connect");
       return;
     }
 
@@ -48,7 +58,7 @@ export function DreamForm({ onSuccess }: DreamFormProps) {
       setTitle("");
       setCategory(null);
       setTargetYear(new Date().getFullYear() + 1);
-      
+
       if (onSuccess) {
         onSuccess();
       }
@@ -77,12 +87,19 @@ export function DreamForm({ onSuccess }: DreamFormProps) {
 
       <div className="space-y-2">
         <Label htmlFor="category">
-          Category <span className="text-muted-foreground text-xs">(optional - AI will suggest if empty)</span>
+          Category{" "}
+          <span className="text-muted-foreground text-xs">
+            (optional - AI will suggest if empty)
+          </span>
         </Label>
         <select
           id="category"
           value={category || ""}
-          onChange={(e) => setCategory(e.target.value ? (e.target.value as DreamCategory) : null)}
+          onChange={(e) =>
+            setCategory(
+              e.target.value ? (e.target.value as DreamCategory) : null
+            )
+          }
           disabled={isSubmitting}
           className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:border-ring disabled:cursor-not-allowed disabled:opacity-50"
         >
@@ -101,7 +118,11 @@ export function DreamForm({ onSuccess }: DreamFormProps) {
           id="targetYear"
           type="number"
           value={targetYear}
-          onChange={(e) => setTargetYear(parseInt(e.target.value) || new Date().getFullYear() + 1)}
+          onChange={(e) =>
+            setTargetYear(
+              parseInt(e.target.value) || new Date().getFullYear() + 1
+            )
+          }
           min={new Date().getFullYear()}
           max={2100}
           disabled={isSubmitting}
@@ -128,4 +149,3 @@ export function DreamForm({ onSuccess }: DreamFormProps) {
     </form>
   );
 }
-

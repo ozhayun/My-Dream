@@ -1,231 +1,269 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { clsx } from "clsx";
 import { Loader2, Send, Mic, MicOff } from "lucide-react";
 import { DreamEntry } from "@/types/dream";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@clerk/nextjs";
 import { DreamReviewModal } from "@/components/DreamReviewModal";
 import { DREAM_SUGGESTIONS } from "@/lib/suggestions";
 import { createDreamsAction, saveDreamsBatchAction } from "@/app/actions";
+import type {
+  SpeechRecognition,
+  SpeechRecognitionEvent,
+  SpeechRecognitionErrorEvent,
+  WindowWithSpeechRecognition,
+} from "@/types/speech-recognition";
 
 export function DreamInputSection() {
-    const [dreamText, setDreamText] = useState("");
-    const [isAnalyzing, setIsAnalyzing] = useState(false);
-    const [error, setError] = useState("");
-    const [analyzedDreams, setAnalyzedDreams] = useState<DreamEntry[]>([]);
-    const [showReviewModal, setShowReviewModal] = useState(false);
-    const [isListening, setIsListening] = useState(false);
-    const [interimTranscript, setInterimTranscript] = useState("");
-    const recognitionRef = useRef<any>(null);
-    const router = useRouter();
-    const [suggestions, setSuggestions] = useState<string[]>([]);
+  const { isSignedIn } = useAuth();
+  const [dreamText, setDreamText] = useState("");
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [error, setError] = useState("");
+  const [analyzedDreams, setAnalyzedDreams] = useState<DreamEntry[]>([]);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [interimTranscript, setInterimTranscript] = useState("");
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const router = useRouter();
+  const [suggestions, setSuggestions] = useState<string[]>([]);
 
-    useEffect(() => {
-        const shuffled = [...DREAM_SUGGESTIONS].sort(() => 0.5 - Math.random());
-        setSuggestions(shuffled.slice(0, 3));
-    }, []);
+  useEffect(() => {
+    const shuffled = [...DREAM_SUGGESTIONS].sort(() => 0.5 - Math.random());
+    setSuggestions(shuffled.slice(0, 3));
+  }, []);
 
-    useEffect(() => {
-        if (typeof window !== "undefined" && ("webkitSpeechRecognition" in window || "speechRecognition" in window)) {
-            const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).speechRecognition;
-            const recognizer = new SpeechRecognition();
-            recognizer.continuous = true;
-            recognizer.interimResults = true;
-            recognizer.lang = "en-US";
+  useEffect(() => {
+    if (
+      typeof window !== "undefined" &&
+      ("webkitSpeechRecognition" in window || "speechRecognition" in window)
+    ) {
+      const windowWithSR = window as unknown as WindowWithSpeechRecognition;
+      const SpeechRecognition =
+        windowWithSR.webkitSpeechRecognition || windowWithSR.speechRecognition;
 
-            recognizer.onresult = (event: any) => {
-                let finalTranscript = "";
-                let currentInterim = "";
+      if (!SpeechRecognition) return;
 
-                for (let i = event.resultIndex; i < event.results.length; i++) {
-                    const transcript = event.results[i][0].transcript;
-                    if (event.results[i].isFinal) {
-                        finalTranscript += transcript;
-                    } else {
-                        currentInterim += transcript;
-                    }
-                }
+      const recognizer = new SpeechRecognition();
+      recognizer.continuous = true;
+      recognizer.interimResults = true;
+      recognizer.lang = "en-US";
 
-                if (finalTranscript) {
-                    setDreamText(prev => (prev.trim() + " " + finalTranscript).trim());
-                    setInterimTranscript("");
-                } else {
-                    setInterimTranscript(currentInterim);
-                }
-            };
+      recognizer.onresult = (event: SpeechRecognitionEvent) => {
+        let finalTranscript = "";
+        let currentInterim = "";
 
-            recognizer.onend = () => {
-                setIsListening(false);
-                setInterimTranscript("");
-            };
-
-            recognizer.onerror = (event: any) => {
-                console.error("Speech recognition error", event.error);
-                setIsListening(false);
-                setInterimTranscript("");
-            };
-
-            recognitionRef.current = recognizer;
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript;
+          } else {
+            currentInterim += transcript;
+          }
         }
-    }, []);
 
-    const toggleListening = () => {
-        if (isListening) {
-            recognitionRef.current?.stop();
-            setIsListening(false);
+        if (finalTranscript) {
+          setDreamText((prev) => (prev.trim() + " " + finalTranscript).trim());
+          setInterimTranscript("");
         } else {
-            if (!recognitionRef.current) {
-                setError("Speech recognition is not supported in this browser.");
-                return;
-            }
-            setError("");
-            recognitionRef.current.start();
-            setIsListening(true);
+          setInterimTranscript(currentInterim);
         }
-    };
+      };
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!dreamText.trim()) return;
+      recognizer.onend = () => {
+        setIsListening(false);
+        setInterimTranscript("");
+      };
 
-        setIsAnalyzing(true);
-        setError("");
+      recognizer.onerror = (event: SpeechRecognitionErrorEvent) => {
+        console.error("Speech recognition error", event.error);
+        setIsListening(false);
+        setInterimTranscript("");
+      };
 
-        try {
-            const dreams = await createDreamsAction(dreamText);
-            
-            if (dreams && dreams.length > 0) {
-                setAnalyzedDreams(dreams);
-                setShowReviewModal(true);
-            } else {
-                setError("I couldn't identify any specific dreams. Try being more descriptive.");
-            }
+      recognitionRef.current = recognizer;
+    }
+  }, []);
 
-        } catch (err: any) {
-            // Log full error to console for debugging
-            console.error("Error in handleSubmit:", err);
-            // Show user-friendly error message
-            setError(err.message || "Something went wrong while analyzing your dreams. Please try again.");
-        } finally {
-            setIsAnalyzing(false);
-        }
-    };
+  const toggleListening = () => {
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+    } else {
+      if (!recognitionRef.current) {
+        setError("Speech recognition is not supported in this browser.");
+        return;
+      }
+      setError("");
+      recognitionRef.current.start();
+      setIsListening(true);
+    }
+  };
 
-    const handleSaveDreams = async (dreamsToSave: DreamEntry[]) => {
-        try {
-            await saveDreamsBatchAction(dreamsToSave);
-            router.push("/dreams");
-        } catch (err: any) {
-            console.error(err);
-            setError("Failed to save your dreams. Please try again.");
-        }
-    };
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!dreamText.trim()) return;
 
-
-
-    const handleKeyDown = (e: React.KeyboardEvent) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            handleSubmit(e);
-        }
+    // Check if user is authenticated - redirect to connect if not
+    if (!isSignedIn) {
+      router.push("/connect");
+      return;
     }
 
-    const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-        setDreamText(e.target.value);
-        e.target.style.height = 'auto';
-        e.target.style.height = `${Math.min(e.target.scrollHeight, 300)}px`;
-    };
+    setIsAnalyzing(true);
+    setError("");
 
-    return (
-        <div className="w-full relative">
-            <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.2, duration: 0.5 }}
-                className="w-full relative"
-            >
-                <div className="relative bg-secondary/30 border border-white/10 rounded-3xl pl-4 py-4 shadow-2xl backdrop-blur-xl focus-within:ring-2 focus-within:ring-primary/50 transition-all">
-                    <form onSubmit={handleSubmit} className="relative">
-                        <textarea
-                            value={dreamText + (interimTranscript ? (dreamText ? " " : "") + interimTranscript : "")}
-                            dir='auto'
-                            onChange={handleInput}
-                            onKeyDown={handleKeyDown}
-                            readOnly={isListening}
-                            placeholder={isListening ? "Listening..." : "I want to learn piano, travel to Mars, and build a robot..."}
-                            className={clsx(
-                                "w-full bg-transparent border-none focus:ring-0 text-lg placeholder:text-muted-foreground/40 resize-none min-h-[80px] max-h-[300px] outline-none pr-28 custom-scrollbar transition-opacity",
-                                isListening && "opacity-70"
-                            )}
-                        />
-                        
-                        <div className="absolute bottom-0 right-4 flex gap-2">
-                             <button
-                                type="button"
-                                onClick={toggleListening}
-                                className={clsx(
-                                    "w-10 h-10 flex items-center justify-center rounded-full transition-all shadow-lg",
-                                    isListening 
-                                        ? "bg-red-500 text-white animate-pulse" 
-                                        : "bg-secondary/50 text-muted-foreground hover:bg-secondary/80"
-                                )}
-                                title={isListening ? "Stop Recording" : "Speak your dream"}
-                            >
-                                {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
-                            </button>
-                            <button
-                                type="submit"
-                                disabled={isAnalyzing || !dreamText.trim()}
-                                className="w-10 h-10 flex items-center justify-center rounded-full bg-primary text-primary-foreground hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-primary/25"
-                            >
-                                {isAnalyzing ? (
-                                    <Loader2 className="w-5 h-5 animate-spin" />
-                                ) : (
-                                    <Send className="w-5 h-5" />
-                                )}
-                            </button>
-                        </div>
-                    </form>
-                </div>
-                
-                {error && (
-                    <motion.p 
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="text-red-400 text-sm mt-4"
-                    >
-                        {error}
-                    </motion.p>
+    try {
+      const dreams = await createDreamsAction(dreamText);
+
+      if (dreams && dreams.length > 0) {
+        setAnalyzedDreams(dreams);
+        setShowReviewModal(true);
+      } else {
+        setError(
+          "I couldn't identify any specific dreams. Try being more descriptive."
+        );
+      }
+    } catch (err) {
+      // Log full error to console for debugging
+      console.error("Error in handleSubmit:", err);
+      // Show user-friendly error message
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : "Something went wrong while analyzing your dreams. Please try again.";
+      setError(errorMessage);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  const handleSaveDreams = async (dreamsToSave: DreamEntry[]) => {
+    try {
+      await saveDreamsBatchAction(dreamsToSave);
+      router.push("/dreams");
+    } catch (err) {
+      console.error("Error saving dreams:", err);
+      setError("Failed to save your dreams. Please try again.");
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit(e);
+    }
+  };
+
+  const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setDreamText(e.target.value);
+    e.target.style.height = "auto";
+    e.target.style.height = `${Math.min(e.target.scrollHeight, 300)}px`;
+  };
+
+  return (
+    <div className="w-full relative">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 0.2, duration: 0.5 }}
+        className="w-full relative"
+      >
+        <div className="relative bg-secondary/30 border border-white/10 rounded-3xl pl-4 py-4 shadow-2xl backdrop-blur-xl focus-within:ring-2 focus-within:ring-primary/50 transition-all">
+          <form onSubmit={handleSubmit} className="relative">
+            <textarea
+              value={
+                dreamText +
+                (interimTranscript
+                  ? (dreamText ? " " : "") + interimTranscript
+                  : "")
+              }
+              dir="auto"
+              onChange={handleInput}
+              onKeyDown={handleKeyDown}
+              readOnly={isListening}
+              placeholder={
+                isListening
+                  ? "Listening..."
+                  : "I want to learn piano, travel to Mars, and build a robot..."
+              }
+              className={clsx(
+                "w-full bg-transparent border-none focus:ring-0 text-lg placeholder:text-muted-foreground/40 resize-none min-h-[80px] max-h-[300px] outline-none pr-28 custom-scrollbar transition-opacity",
+                isListening && "opacity-70"
+              )}
+            />
+
+            <div className="absolute bottom-0 right-4 flex gap-2">
+              <button
+                type="button"
+                onClick={toggleListening}
+                className={clsx(
+                  "w-10 h-10 flex items-center justify-center rounded-full transition-all shadow-lg",
+                  isListening
+                    ? "bg-red-500 text-white animate-pulse"
+                    : "bg-secondary/50 text-muted-foreground hover:bg-secondary/80"
                 )}
-            </motion.div>
-            
-            {/* Suggestion Chips */}
-            <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.5 }}
-                className="flex flex-wrap justify-center gap-3 mt-8 min-h-[40px]"
-            >
-                {suggestions.map((s, i) => (
-                    <button 
-                        key={s} // use string as key since they are unique
-                        onClick={() => setDreamText(s)}
-                        className="px-4 py-2 rounded-full bg-secondary/30 border border-white/5 text-sm hover:bg-secondary/60 hover:border-white/10 transition-colors animate-in fade-in zoom-in duration-300"
-                    >
-                        {s}
-                    </button>
-                ))}
-            </motion.div>
-
-            {showReviewModal && (
-                <DreamReviewModal 
-                    dreams={analyzedDreams} 
-                    onSave={handleSaveDreams} 
-                    onCancel={() => setShowReviewModal(false)} 
-                />
-            )}
+                title={isListening ? "Stop Recording" : "Speak your dream"}
+              >
+                {isListening ? (
+                  <MicOff className="w-5 h-5" />
+                ) : (
+                  <Mic className="w-5 h-5" />
+                )}
+              </button>
+              <button
+                type="submit"
+                disabled={isAnalyzing || !dreamText.trim()}
+                className="w-10 h-10 flex items-center justify-center rounded-full bg-primary text-primary-foreground hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-primary/25"
+              >
+                {isAnalyzing ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <Send className="w-5 h-5" />
+                )}
+              </button>
+            </div>
+          </form>
         </div>
-    );
+
+        {error && (
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-red-400 text-sm mt-4"
+          >
+            {error}
+          </motion.p>
+        )}
+      </motion.div>
+
+      {/* Suggestion Chips */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.5 }}
+        className="flex flex-wrap justify-center gap-3 mt-8 min-h-[40px]"
+      >
+        {suggestions.map((s) => (
+          <button
+            key={s}
+            onClick={() => setDreamText(s)}
+            className="px-4 py-2 rounded-full bg-secondary/30 border border-white/5 text-sm hover:bg-secondary/60 hover:border-white/10 transition-colors animate-in fade-in zoom-in duration-300"
+          >
+            {s}
+          </button>
+        ))}
+      </motion.div>
+
+      {showReviewModal && (
+        <DreamReviewModal
+          dreams={analyzedDreams}
+          onSave={handleSaveDreams}
+          onCancel={() => setShowReviewModal(false)}
+        />
+      )}
+    </div>
+  );
 }

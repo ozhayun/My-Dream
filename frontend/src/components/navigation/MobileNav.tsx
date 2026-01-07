@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { List, Info, Menu, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
-import { SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 
 export function MobileNav() {
   const [isOpen, setIsOpen] = useState(false);
@@ -16,11 +16,12 @@ export function MobileNav() {
       {/* Mobile Header Controls */}
       <div className="md:hidden flex items-center gap-3 z-50">
         <SignedOut>
-          <SignInButton mode="modal">
-            <button className="text-sm font-medium px-3 py-1.5 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
-              Sign In
-            </button>
-          </SignInButton>
+          <Link
+            href="/connect"
+            className="text-sm font-medium px-3 py-1.5 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+          >
+            Sign In
+          </Link>
         </SignedOut>
         <SignedIn>
           <UserButton
