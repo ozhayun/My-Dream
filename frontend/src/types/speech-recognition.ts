@@ -8,6 +8,9 @@ export interface SpeechRecognition extends EventTarget {
   start(): void;
   stop(): void;
   onstart: (() => void) | null;
+  onaudiostart: (() => void) | null;
+  onsoundstart: (() => void) | null;
+  onspeechstart: (() => void) | null;
   onresult: ((event: SpeechRecognitionEvent) => void) | null;
   onend: (() => void) | null;
   onerror: ((event: SpeechRecognitionErrorEvent) => void) | null;

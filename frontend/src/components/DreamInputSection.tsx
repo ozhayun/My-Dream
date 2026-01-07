@@ -66,23 +66,23 @@ export function DreamInputSection() {
         isListeningRef.current = true;
         lastSpeechResultAtRef.current = null;
         setIsListening(true);
+      };
 
-        // If we don't receive any results shortly after starting, surface a clear hint.
+      recognizer.onaudiostart = () => {
+        console.log("Audio capture started - microphone is working!");
+        // Clear the no-result timeout since we're getting audio
         if (noResultTimeoutIdRef.current) {
           window.clearTimeout(noResultTimeoutIdRef.current);
+          noResultTimeoutIdRef.current = null;
         }
-        noResultTimeoutIdRef.current = window.setTimeout(() => {
-          // Only show if we're still listening and nothing arrived.
-          if (
-            isListeningRef.current &&
-            lastSpeechResultAtRef.current === null
-          ) {
-            setError(
-              "Voice input started but no speech was recognized. If you're on iPhone/iPad or Firefox, Web Speech may not be supported. Try Chrome/Edge on desktop, or use typing."
-            );
-            setTimeout(() => setError(""), 7000);
-          }
-        }, 4000);
+      };
+
+      recognizer.onsoundstart = () => {
+        console.log("Sound detected!");
+      };
+
+      recognizer.onspeechstart = () => {
+        console.log("Speech detected!");
       };
 
       recognizer.onresult = (event: SpeechRecognitionEvent) => {
@@ -183,9 +183,27 @@ export function DreamInputSection() {
               "Microphone access denied. Please allow microphone permissions in your browser settings.";
             break;
           case "no-speech":
-            // Don't stop on no-speech, just keep listening
+            // Don't stop on no-speech immediately - this is normal if user pauses
+            // Only stop if we get multiple consecutive no-speech errors
             console.log("No speech detected, continuing to listen...");
             shouldStop = false;
+
+            // In production, Chrome sometimes fires no-speech immediately
+            // Wait a bit longer before showing an error
+            if (noResultTimeoutIdRef.current) {
+              window.clearTimeout(noResultTimeoutIdRef.current);
+            }
+            noResultTimeoutIdRef.current = window.setTimeout(() => {
+              if (
+                isListeningRef.current &&
+                lastSpeechResultAtRef.current === null
+              ) {
+                setError(
+                  "No speech detected. Please speak clearly into your microphone. Make sure your microphone is working and not muted."
+                );
+                setTimeout(() => setError(""), 5000);
+              }
+            }, 3000);
             break;
           case "network":
             errorMessage =
