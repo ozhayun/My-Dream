@@ -3,6 +3,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { AlertTriangle, X } from "lucide-react";
 import { clsx } from "clsx";
+import { createPortal } from "react-dom";
 
 interface DeleteConfirmModalProps {
   isOpen: boolean;
@@ -23,17 +24,17 @@ export function DeleteConfirmModal({
   confirmText = "Delete",
   confirmVariant = "danger",
 }: DeleteConfirmModalProps) {
-  return (
+  const modalContent = (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onCancel}
-            className="absolute inset-0 bg-background/80 backdrop-blur-md"
+            className="fixed inset-0 bg-background/80 backdrop-blur-md pointer-events-auto"
           />
 
           {/* Modal Content */}
@@ -41,7 +42,8 @@ export function DeleteConfirmModal({
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="relative w-full max-w-md bg-secondary/20 border border-white/10 rounded-3xl p-8 shadow-2xl backdrop-blur-xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+            className="relative z-10 w-full max-w-md bg-secondary/20 border border-white/10 rounded-3xl p-8 shadow-2xl backdrop-blur-xl overflow-hidden pointer-events-auto"
           >
             {/* Glass Grain Effect Overlay */}
             <div className="absolute inset-0 pointer-events-none opacity-[0.03] bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
@@ -98,4 +100,8 @@ export function DeleteConfirmModal({
       )}
     </AnimatePresence>
   );
+
+  if (typeof window === "undefined") return null;
+
+  return createPortal(modalContent, document.body);
 }
