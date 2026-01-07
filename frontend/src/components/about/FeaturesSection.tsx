@@ -23,32 +23,23 @@ const features = [
     icon: Sparkles,
     title: "AI-Powered Analysis",
     description:
-      "Our local LLM analyzes your text to extract distinct dreams, categorize them intelligently, and suggest realistic timelines.",
-    bullets: [
-      "Automatic dream extraction",
-      "Smart categorization",
-      "Target year suggestions",
-    ],
+      "Lightning-fast AI extracts dreams, categorizes them, and suggests realistic timelines.",
+    bullets: ["Instant extraction", "Smart categorization", "Year planning"],
     iconColor: "text-yellow-400",
   },
   {
     icon: Target,
-    title: "SMART Goals & Milestones",
-    description:
-      "Transform vague dreams into Specific, Measurable, Achievable, Relevant, and Time-bound goals with actionable milestones.",
-    bullets: [
-      "SMART goal generation",
-      "Customizable milestones",
-      "Progress tracking",
-    ],
+    title: "SMART Goals",
+    description: "Transform dreams into actionable goals with milestones.",
+    bullets: ["SMART goals", "Milestones", "Progress tracking"],
     iconColor: "text-blue-400",
   },
   {
     icon: Zap,
     title: "Multiple Views",
     description:
-      "Visualize your dreams through kanban boards, timelines, category dashboards, and detailed views.",
-    bullets: ["Kanban board", "Timeline view", "Category breakdown"],
+      "Visualize dreams through kanban boards, timelines, and categories.",
+    bullets: ["Kanban", "Timeline", "Categories"],
     iconColor: "text-purple-400",
   },
 ];
@@ -73,7 +64,9 @@ export function FeaturesSection() {
             >
               <Icon className={`w-8 h-8 ${feature.iconColor} mb-4`} />
               <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
-              <p className="text-muted-foreground mb-4">{feature.description}</p>
+              <p className="text-muted-foreground mb-4">
+                {feature.description}
+              </p>
               <ul className="text-sm text-muted-foreground space-y-1">
                 {feature.bullets.map((bullet, i) => (
                   <li key={i}>• {bullet}</li>
@@ -86,4 +79,3 @@ export function FeaturesSection() {
     </motion.div>
   );
 }
-

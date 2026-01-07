@@ -15,17 +15,14 @@ export interface TechStackItem {
 }
 
 export const TECH_STACK: TechStackItem[] = [
-  { name: "Next.js", description: "React framework for the frontend" },
-  { name: "FastAPI", description: "Python backend API" },
-  { name: "LangChain", description: "AI orchestration framework" },
-  { name: "Ollama", description: "Local LLM runtime" },
-  {
-    name: "Sentence Transformers",
-    description: "Semantic search engine",
-  },
-  { name: "TypeScript", description: "Type-safe development" },
-  { name: "Tailwind CSS", description: "Utility-first styling" },
-  { name: "Framer Motion", description: "Smooth animations" },
+  { name: "Next.js 15", description: "React framework" },
+  { name: "Clerk", description: "Authentication" },
+  { name: "Supabase", description: "Database" },
+  { name: "Groq", description: "AI platform" },
+  { name: "TypeScript", description: "Type safety" },
+  { name: "Tailwind CSS", description: "Styling" },
+  { name: "Framer Motion", description: "Animations" },
+  { name: "Netlify", description: "Hosting" },
 ];
 
 export interface HowItWorksStep {
@@ -40,28 +37,28 @@ export const HOW_IT_WORKS_STEPS: HowItWorksStep[] = [
     icon: Brain,
     title: "Share Your Dreams",
     description:
-      "Write freely about your aspirations, goals, and wishes. No structure needed—just pour your heart out.",
+      "Write or speak about your dreams. No structure needed.",
     color: "text-purple-400",
   },
   {
     icon: Sparkles,
     title: "AI Analysis",
     description:
-      "Our local AI model analyzes your text, extracts distinct dreams, and categorizes them intelligently.",
+      "AI extracts dreams, suggests categories, and generates summaries.",
     color: "text-yellow-400",
   },
   {
     icon: Target,
     title: "Smart Planning",
     description:
-      "Get realistic target years, SMART goals, and actionable milestones for each dream.",
+      "Get realistic timelines with intelligent year distribution.",
     color: "text-blue-400",
   },
   {
     icon: Rocket,
     title: "Track Progress",
     description:
-      "Use kanban boards, timelines, and journal entries to stay on track and celebrate wins.",
+      "Visualize with kanban boards, timelines, and category views.",
     color: "text-pink-400",
   },
 ];

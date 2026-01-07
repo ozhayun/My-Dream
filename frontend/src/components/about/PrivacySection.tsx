@@ -1,13 +1,13 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Shield, Lock, Database, Code } from "lucide-react";
+import { Shield, Lock, Database, Cloud } from "lucide-react";
 
 const privacyFeatures = [
-  { icon: Database, text: "Local JSON storage" },
-  { icon: Code, text: "Local LLM via Ollama" },
-  { icon: Shield, text: "No external API calls" },
-  { icon: Lock, text: "100% private & secure" },
+  { icon: Database, text: "Supabase encrypted database" },
+  { icon: Cloud, text: "Secure cloud storage" },
+  { icon: Shield, text: "Clerk authentication" },
+  { icon: Lock, text: "User data isolation" },
 ];
 
 export function PrivacySection() {
@@ -28,8 +28,7 @@ export function PrivacySection() {
             Privacy First
           </h3>
           <p className="text-muted-foreground mb-4">
-            Your dreams are yours alone. Everything runs locally on your
-            machine—no cloud, no tracking, no data collection.
+            Your dreams are yours alone. All data is encrypted and stored securely. Only you can access your dreams through secure authentication.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             {privacyFeatures.map((feature, index) => {
