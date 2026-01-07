@@ -45,7 +45,7 @@ export async function createDreamsAction(text: string) {
       ],
       model: process.env.GROQ_MODEL || "llama-3.1-8b-instant",
       temperature: 0.7,
-      max_tokens: 1000,
+      max_tokens: 2000,
       response_format: { type: "json_object" },
     });
 
