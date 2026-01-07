@@ -16,8 +16,7 @@ export function ClientTimelineWrapper({ dreams }: { dreams: DreamEntry[] }) {
         try {
             await api.dreams.update(id, { completed });
             router.refresh();
-        } catch (error) {
-            console.error("Failed to update dream status", error);
+        } catch {
         }
     };
 

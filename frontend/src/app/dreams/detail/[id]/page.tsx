@@ -22,7 +22,6 @@ export default async function DreamDetailPage({
     if (errorMessage.includes("Dream not found")) {
       return notFound();
     }
-    console.error("Failed to fetch dream:", error);
     return notFound();
   }
 

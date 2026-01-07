@@ -63,7 +63,6 @@ export function DreamForm({ onSuccess }: DreamFormProps) {
         onSuccess();
       }
     } catch (err) {
-      console.error("Error saving dream:", err);
       setError(err instanceof Error ? err.message : "Failed to save dream");
     } finally {
       setIsSubmitting(false);

@@ -18,7 +18,6 @@ export function DreamDashboard() {
       const data = await getDreams();
       setDreams(data);
     } catch (err) {
-      console.error("Error fetching dreams:", err);
       setError(err instanceof Error ? err.message : "Failed to fetch dreams");
     } finally {
       setIsLoading(false);

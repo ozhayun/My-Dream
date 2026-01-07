@@ -28,8 +28,6 @@ export function DreamInputSection() {
   const [interimTranscript, setInterimTranscript] = useState("");
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const isListeningRef = useRef(false);
-  const lastSpeechResultAtRef = useRef<number | null>(null);
-  const noResultTimeoutIdRef = useRef<number | null>(null);
   const router = useRouter();
   const [suggestions, setSuggestions] = useState<string[]>([]);
 
@@ -41,228 +39,113 @@ export function DreamInputSection() {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    // Check if we're in a secure context (HTTPS or localhost)
-    const isSecureContext =
-      window.isSecureContext ||
-      window.location.protocol === "https:" ||
-      window.location.hostname === "localhost" ||
-      window.location.hostname === "127.0.0.1";
+    const windowWithSR = window as unknown as WindowWithSpeechRecognition;
+    const SpeechRecognition =
+      windowWithSR.webkitSpeechRecognition || windowWithSR.speechRecognition;
 
-    if ("webkitSpeechRecognition" in window || "speechRecognition" in window) {
-      const windowWithSR = window as unknown as WindowWithSpeechRecognition;
-      const SpeechRecognition =
-        windowWithSR.webkitSpeechRecognition || windowWithSR.speechRecognition;
+    if (!SpeechRecognition) return;
 
-      if (!SpeechRecognition) return;
+    const recognizer = new SpeechRecognition();
+    recognizer.continuous = true;
+    recognizer.interimResults = true;
+    recognizer.lang = "en-US";
 
-      const recognizer = new SpeechRecognition();
-      recognizer.continuous = true;
-      recognizer.interimResults = true;
-      // Use English for better compatibility in production
-      // Hebrew (he-IL) may not be well supported by Google's speech service in all regions
-      recognizer.lang = "en-US";
-      console.log("Speech recognition language:", recognizer.lang);
+    recognizer.onstart = () => {
+      isListeningRef.current = true;
+      setIsListening(true);
+    };
 
-      recognizer.onstart = () => {
-        console.log("Speech recognition started");
-        isListeningRef.current = true;
-        lastSpeechResultAtRef.current = null;
-        setIsListening(true);
-      };
+    recognizer.onresult = (event: SpeechRecognitionEvent) => {
+      let finalTranscript = "";
+      let currentInterim = "";
 
-      recognizer.onaudiostart = () => {
-        console.log("Audio capture started - microphone is working!");
-        // Clear the no-result timeout since we're getting audio
-        if (noResultTimeoutIdRef.current) {
-          window.clearTimeout(noResultTimeoutIdRef.current);
-          noResultTimeoutIdRef.current = null;
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const result = event.results[i];
+        const transcript = result[0]?.transcript || "";
+
+        if (result.isFinal) {
+          finalTranscript += transcript + " ";
+        } else {
+          currentInterim += transcript;
         }
-      };
+      }
 
-      recognizer.onsoundstart = () => {
-        console.log("Sound detected!");
-      };
-
-      recognizer.onspeechstart = () => {
-        console.log("Speech detected!");
-      };
-
-      recognizer.onresult = (event: SpeechRecognitionEvent) => {
-        lastSpeechResultAtRef.current = Date.now();
-        console.log("onresult fired!", {
-          resultIndex: event.resultIndex,
-          resultsLength: event.results.length,
-          results: event.results,
+      if (finalTranscript.trim()) {
+        setDreamText((prev) => {
+          return (prev.trim() + " " + finalTranscript.trim()).trim();
         });
-
-        let finalTranscript = "";
-        let currentInterim = "";
-
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          const result = event.results[i];
-          const transcript = result[0]?.transcript || "";
-          console.log(`Result ${i}:`, {
-            transcript,
-            isFinal: result.isFinal,
-          });
-
-          if (result.isFinal) {
-            finalTranscript += transcript + " ";
-          } else {
-            currentInterim += transcript;
-          }
-        }
-
-        if (finalTranscript.trim()) {
-          setDreamText((prev) => {
-            const newText = (prev.trim() + " " + finalTranscript.trim()).trim();
-            console.log(
-              "Final transcript:",
-              finalTranscript.trim(),
-              "New text:",
-              newText
-            );
-            return newText;
-          });
-          setInterimTranscript("");
-        } else if (currentInterim) {
-          console.log("Interim transcript:", currentInterim);
-          setInterimTranscript(currentInterim);
-        } else {
-          console.log("No transcript found in results");
-        }
-      };
-
-      recognizer.onend = () => {
-        console.log(
-          "Speech recognition ended, isListening:",
-          isListeningRef.current
-        );
-        if (noResultTimeoutIdRef.current) {
-          window.clearTimeout(noResultTimeoutIdRef.current);
-          noResultTimeoutIdRef.current = null;
-        }
-        // If we're still supposed to be listening, restart (continuous mode)
-        if (isListeningRef.current && recognitionRef.current) {
-          console.log("Restarting speech recognition...");
-          try {
-            recognitionRef.current.start();
-          } catch (err) {
-            console.error("Error restarting recognition:", err);
-            isListeningRef.current = false;
-            setIsListening(false);
-            setInterimTranscript("");
-          }
-        } else {
-          isListeningRef.current = false;
-          setIsListening(false);
-          setInterimTranscript("");
-        }
-      };
-
-      recognizer.onerror = (event: SpeechRecognitionErrorEvent) => {
-        console.error(
-          "Speech recognition error:",
-          event.error,
-          "Full event:",
-          event,
-          "Is listening:",
-          isListeningRef.current
-        );
         setInterimTranscript("");
-        if (noResultTimeoutIdRef.current) {
-          window.clearTimeout(noResultTimeoutIdRef.current);
-          noResultTimeoutIdRef.current = null;
-        }
+      } else if (currentInterim) {
+        setInterimTranscript(currentInterim);
+      }
+    };
 
-        // Provide user-friendly error messages
-        let errorMessage = "";
-        let shouldStop = true;
-
-        switch (event.error) {
-          case "not-allowed":
-            errorMessage =
-              "Microphone access denied. Please allow microphone permissions in your browser settings.";
-            break;
-          case "no-speech":
-            // Don't stop on no-speech immediately - this is normal if user pauses
-            // Only stop if we get multiple consecutive no-speech errors
-            console.log("No speech detected, continuing to listen...");
-            shouldStop = false;
-
-            // In production, Chrome sometimes fires no-speech immediately
-            // Wait a bit longer before showing an error
-            if (noResultTimeoutIdRef.current) {
-              window.clearTimeout(noResultTimeoutIdRef.current);
-            }
-            noResultTimeoutIdRef.current = window.setTimeout(() => {
-              if (
-                isListeningRef.current &&
-                lastSpeechResultAtRef.current === null
-              ) {
-                setError(
-                  "No speech detected. Please speak clearly into your microphone. Make sure your microphone is working and not muted."
-                );
-                setTimeout(() => setError(""), 5000);
-              }
-            }, 3000);
-            break;
-          case "network":
-            errorMessage =
-              "Network error connecting to speech service. Please check your internet connection and try again.";
-            break;
-          case "aborted":
-            // User stopped, don't show error
-            shouldStop = false;
-            break;
-          case "audio-capture":
-            errorMessage =
-              "No microphone found. Please connect a microphone and try again.";
-            break;
-          case "service-not-allowed":
-            errorMessage =
-              "Speech recognition service is not available. This might be blocked in your network or region. Please try again later or use typing.";
-            break;
-          default:
-            if (!isSecureContext) {
-              errorMessage =
-                "Speech recognition requires HTTPS. Please access this site over a secure connection.";
-            } else {
-              errorMessage = `Speech recognition error: ${event.error}. This might be a network or service issue. Please try again or use typing.`;
-            }
-        }
-
-        if (shouldStop) {
+    recognizer.onend = () => {
+      if (isListeningRef.current && recognitionRef.current) {
+        try {
+          recognitionRef.current.start();
+        } catch {
           isListeningRef.current = false;
           setIsListening(false);
+          setInterimTranscript("");
         }
+      } else {
+        isListeningRef.current = false;
+        setIsListening(false);
+        setInterimTranscript("");
+      }
+    };
 
-        if (errorMessage) {
-          setError(errorMessage);
-          // Clear error after 7 seconds
-          setTimeout(() => setError(""), 7000);
-        }
-      };
+    recognizer.onerror = (event: SpeechRecognitionErrorEvent) => {
+      setInterimTranscript("");
+      let errorMessage = "";
+      let shouldStop = true;
 
-      recognitionRef.current = recognizer;
-    } else if (!isSecureContext) {
-      // Speech recognition not available and not in secure context
-      console.warn(
-        "Speech recognition requires HTTPS in production environments."
-      );
-    }
+      switch (event.error) {
+        case "not-allowed":
+          errorMessage =
+            "Microphone access denied. Please allow microphone permissions in your browser settings.";
+          break;
+        case "no-speech":
+          shouldStop = false;
+          break;
+        case "network":
+          errorMessage =
+            "Network error connecting to speech service. Please check your internet connection and try again.";
+          break;
+        case "aborted":
+          shouldStop = false;
+          break;
+        case "audio-capture":
+          errorMessage =
+            "No microphone found. Please connect a microphone and try again.";
+          break;
+        case "service-not-allowed":
+          errorMessage =
+            "Speech recognition service is not available. This might be blocked in your network or region. Please try again later or use typing.";
+          break;
+        default:
+          errorMessage = `Speech recognition error: ${event.error}. Please try again or use typing.`;
+      }
+
+      if (shouldStop) {
+        isListeningRef.current = false;
+        setIsListening(false);
+      }
+
+      if (errorMessage) {
+        setError(errorMessage);
+        setTimeout(() => setError(""), 7000);
+      }
+    };
+
+    recognitionRef.current = recognizer;
   }, []);
 
-  const toggleListening = async () => {
+  const toggleListening = () => {
     if (isListening) {
       isListeningRef.current = false;
-      lastSpeechResultAtRef.current = null;
-      if (noResultTimeoutIdRef.current) {
-        window.clearTimeout(noResultTimeoutIdRef.current);
-        noResultTimeoutIdRef.current = null;
-      }
       recognitionRef.current?.stop();
-      setIsListening(false);
     } else {
       if (!recognitionRef.current) {
         setError(
@@ -273,34 +156,8 @@ export function DreamInputSection() {
 
       try {
         setError("");
-
-        // Explicitly request microphone permission first
-        // This helps ensure permissions are properly granted in production
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia({
-            audio: true,
-          });
-          // Permission granted, stop the stream immediately (we just needed permission)
-          stream.getTracks().forEach((track) => track.stop());
-          console.log("Microphone permission confirmed");
-        } catch (permError) {
-          console.error("Microphone permission error:", permError);
-          setError(
-            "Microphone access is required. Please allow microphone permissions and try again."
-          );
-          setTimeout(() => setError(""), 5000);
-          return;
-        }
-
-        // Small delay to ensure permission is fully processed
-        await new Promise((resolve) => setTimeout(resolve, 100));
-
-        // Now start speech recognition
         recognitionRef.current.start();
-        console.log("Speech recognition start() called");
-        // Note: setIsListening will be set by onstart handler
       } catch (err) {
-        console.error("Error starting speech recognition:", err);
         isListeningRef.current = false;
         setIsListening(false);
         setError(
@@ -338,9 +195,6 @@ export function DreamInputSection() {
         );
       }
     } catch (err) {
-      // Log full error to console for debugging
-      console.error("Error in handleSubmit:", err);
-      // Show user-friendly error message
       const errorMessage =
         err instanceof Error
           ? err.message
@@ -355,8 +209,7 @@ export function DreamInputSection() {
     try {
       await saveDreamsBatchAction(dreamsToSave);
       router.push("/dreams");
-    } catch (err) {
-      console.error("Error saving dreams:", err);
+    } catch {
       setError("Failed to save your dreams. Please try again.");
     }
   };

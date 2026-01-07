@@ -10,7 +10,6 @@ export const api = {
             try {
                 return await getDreams();
             } catch (error) {
-                console.error("API List Error:", error);
                 throw error;
             }
         },

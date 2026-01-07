@@ -22,8 +22,7 @@ export function ClientStatusWrapper({ dreams }: { dreams: DreamEntry[] }) {
         try {
             await api.dreams.update(dream.id, { completed: newStatus });
             router.refresh();
-        } catch (error) {
-            console.error("Failed to update status", error);
+        } catch {
         }
     };
 

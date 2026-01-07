@@ -43,8 +43,7 @@ export function EditDreamModal({ dream, open, onOpenChange, onSave }: EditDreamM
         completed: isCompleted
       });
       onOpenChange(false);
-    } catch (error) {
-      console.error("Failed to save dream:", error);
+    } catch {
     } finally {
       setIsSaving(false);
     }

@@ -64,7 +64,6 @@ export async function createDreamsAction(text: string) {
     try {
       parsedData = JSON.parse(content);
     } catch {
-      console.error("Failed to parse Groq response:", content);
       throw new Error(
         "Failed to parse AI response. Please try rephrasing your input."
       );
@@ -84,7 +83,6 @@ export async function createDreamsAction(text: string) {
 
     return dreamEntries;
   } catch (error: unknown) {
-    console.error("Error analyzing dreams:", error);
     if (error instanceof Error) {
       throw error;
     }
@@ -163,14 +161,12 @@ export async function polishDreamAction(dreamId: string) {
       .eq("user_id", userId);
 
     if (updateError) {
-      console.error("Error updating dream:", updateError);
       throw new Error(`Failed to save SMART data: ${updateError.message}`);
     }
 
     revalidatePath("/dreams");
     return smartData;
   } catch (error) {
-    console.error("Error in polishDreamAction:", error);
     if (error instanceof Error) {
       throw error;
     }
@@ -239,7 +235,6 @@ export async function saveDream(
     try {
       analysisData = JSON.parse(analysisContent);
     } catch {
-      console.error("Failed to parse Groq response:", analysisContent);
       // Fallback: use original title and category
       analysisData = {
         summary: title,
@@ -269,7 +264,6 @@ export async function saveDream(
       .single();
 
     if (error) {
-      console.error("Supabase error:", error);
       throw new Error(`Failed to save dream: ${error.message}`);
     }
 
@@ -282,7 +276,6 @@ export async function saveDream(
       },
     };
   } catch (error) {
-    console.error("Error in saveDream:", error);
     if (error instanceof Error) {
       throw error;
     }

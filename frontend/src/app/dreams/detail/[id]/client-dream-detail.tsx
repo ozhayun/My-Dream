@@ -39,8 +39,7 @@ export function ClientDreamDetail({
     setIsSaving(true);
     try {
       await updateDreamAction(initialDream.id, updates);
-    } catch (error) {
-      console.error("Failed to update dream", error);
+    } catch {
     } finally {
       setIsSaving(false);
     }
@@ -77,8 +76,7 @@ export function ClientDreamDetail({
         title: smartData.polished_title,
       }));
       router.refresh();
-    } catch (error) {
-      console.error("Failed to polish dream", error);
+    } catch {
     } finally {
       setIsPolishing(false);
     }
@@ -116,8 +114,7 @@ export function ClientDreamDetail({
       const milestones = await generateRoadmapAction(dream.id);
       setDream((prev) => ({ ...prev, milestones }));
       router.refresh();
-    } catch (error) {
-      console.error("Failed to generate roadmap", error);
+    } catch {
     } finally {
       setIsGeneratingRoadmap(false);
     }
@@ -151,9 +148,7 @@ export function ClientDreamDetail({
     try {
       await deleteDreamAction(dream.id);
       window.location.href = "/dreams";
-    } catch (error) {
-      console.error("Failed to delete dream", error);
-    }
+    } catch {}
   };
 
   return (

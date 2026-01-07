@@ -30,9 +30,8 @@ export default function AboutPage() {
       try {
         const data = await api.dreams.list();
         setDreams(data);
-      } catch (error) {
+      } catch {
         // Silently fail - stats section will handle empty state
-        console.error("Failed to load dreams for stats:", error);
       } finally {
         setLoading(false);
       }

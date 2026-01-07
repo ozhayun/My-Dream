@@ -30,7 +30,6 @@ export async function getDreams() {
       .order("created_at", { ascending: false });
 
     if (error) {
-      console.error("Supabase error:", error);
       throw new Error(`Failed to fetch dreams: ${error.message}`);
     }
 
@@ -63,7 +62,6 @@ export async function getDreams() {
 
     return dreams;
   } catch (error) {
-    console.error("Error in getDreams:", error);
     if (error instanceof Error) {
       throw error;
     }
@@ -102,7 +100,6 @@ export async function saveDreamsBatchAction(dreams: DreamEntry[]) {
         .single();
 
       if (error) {
-        console.error("Error saving dream:", error);
         throw new Error(`Failed to save dream: ${error.message}`);
       }
 
@@ -118,7 +115,6 @@ export async function saveDreamsBatchAction(dreams: DreamEntry[]) {
     revalidatePath("/dreams");
     return savedDreams;
   } catch (error) {
-    console.error("Error in saveDreamsBatchAction:", error);
     if (error instanceof Error) {
       throw error;
     }
@@ -188,7 +184,6 @@ export async function updateDreamAction(
       .single();
 
     if (error) {
-      console.error("Supabase error:", error);
       throw new Error(`Failed to update dream: ${error.message}`);
     }
 
@@ -210,7 +205,6 @@ export async function updateDreamAction(
       notes: data.notes || undefined,
     };
   } catch (error) {
-    console.error("Error in updateDreamAction:", error);
     if (error instanceof Error) {
       throw error;
     }
@@ -236,14 +230,12 @@ export async function deleteDreamAction(dreamId: string) {
       .eq("user_id", userId);
 
     if (error) {
-      console.error("Supabase error:", error);
       throw new Error(`Failed to delete dream: ${error.message}`);
     }
 
     revalidatePath("/dreams");
     return { success: true };
   } catch (error) {
-    console.error("Error in deleteDreamAction:", error);
     if (error instanceof Error) {
       throw error;
     }
@@ -271,7 +263,6 @@ export async function searchDreamsAction(query: string) {
       .order("created_at", { ascending: false });
 
     if (error) {
-      console.error("Supabase error:", error);
       throw new Error(`Search failed: ${error.message}`);
     }
 
@@ -293,7 +284,6 @@ export async function searchDreamsAction(query: string) {
 
     return dreams;
   } catch (error) {
-    console.error("Error in searchDreamsAction:", error);
     if (error instanceof Error) {
       throw error;
     }

@@ -37,8 +37,7 @@ export async function POST(req: Request) {
       'svix-timestamp': svix_timestamp,
       'svix-signature': svix_signature,
     }) as any;
-  } catch (err) {
-    console.error('Error verifying webhook:', err);
+  } catch {
     return new Response('Error occurred', {
       status: 400,
     });
@@ -71,15 +70,13 @@ export async function POST(req: Request) {
         });
 
       if (error) {
-        console.error('Error inserting user:', error);
         return new Response(`Error inserting user: ${error.message}`, {
           status: 500,
         });
       }
 
       return new Response('User created successfully', { status: 200 });
-    } catch (error) {
-      console.error('Error processing user.created webhook:', error);
+    } catch {
       return new Response('Error processing webhook', { status: 500 });
     }
   }

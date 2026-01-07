@@ -108,14 +108,12 @@ export async function generateRoadmapAction(dreamId: string) {
       .eq("user_id", userId);
 
     if (updateError) {
-      console.error("Error saving roadmap:", updateError);
       throw new Error(`Failed to save roadmap: ${updateError.message}`);
     }
 
     revalidatePath("/dreams");
     return milestones;
   } catch (error) {
-    console.error("Error in generateRoadmapAction:", error);
     if (error instanceof Error) {
       throw error;
     }

@@ -24,8 +24,7 @@ export function ClientKanbanWrapper({ initialDreams }: { initialDreams: DreamEnt
             if (!res.ok) throw new Error("Failed to update");
             
             router.refresh(); // Refresh server data in background
-        } catch (err) {
-            console.error(err);
+        } catch {
             setDreams(previousDreams); // Revert on error
         }
     };

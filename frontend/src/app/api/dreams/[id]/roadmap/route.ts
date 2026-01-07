@@ -84,8 +84,7 @@ Respond in JSON format:
 
         const roadmapData = JSON.parse(content);
         return NextResponse.json(roadmapData);
-    } catch (error) {
-        console.error("Error generating roadmap:", error);
+    } catch {
         return NextResponse.json({ error: "Failed to generate roadmap" }, { status: 500 });
     }
 }

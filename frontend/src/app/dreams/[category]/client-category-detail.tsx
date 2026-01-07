@@ -25,8 +25,7 @@ export function ClientCategoryDetailWrapper({ dreams }: { dreams: DreamEntry[] }
         setLocalDreams(prev => prev.filter(d => d.id !== deleteDreamId));
         try {
             await deleteDreamAction(deleteDreamId);
-        } catch (error) {
-            console.error("Failed to delete dream", error);
+        } catch {
         } finally {
             setDeleteDreamId(null);
         }
