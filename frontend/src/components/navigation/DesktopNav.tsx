@@ -16,18 +16,20 @@ export function DesktopNav() {
       >
         <Plus className="w-4 h-4" /> Add Dream
       </Link>
-      <Link
-        href="/dreams"
-        className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2"
-        onClick={(e) => {
-          if (window.location.search || pathname === "/dreams") {
-            e.preventDefault();
-            window.location.href = "/dreams";
-          }
-        }}
-      >
-        <List className="w-4 h-4" /> My List
-      </Link>
+      <SignedIn>
+        <Link
+          href="/dreams"
+          className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2"
+          onClick={(e) => {
+            if (window.location.search || pathname === "/dreams") {
+              e.preventDefault();
+              window.location.href = "/dreams";
+            }
+          }}
+        >
+          <List className="w-4 h-4" /> My List
+        </Link>
+      </SignedIn>
       <Link
         href="/about"
         className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2"

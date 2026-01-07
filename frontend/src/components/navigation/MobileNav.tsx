@@ -60,16 +60,18 @@ export function MobileNav() {
               </div>
               <span className="font-medium">Add Dream</span>
             </Link>
-            <Link
-              href="/dreams"
-              onClick={closeMenu}
-              className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors"
-            >
-              <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400">
-                <List className="w-4 h-4" />
-              </div>
-              <span className="font-medium">My List</span>
-            </Link>
+            <SignedIn>
+              <Link
+                href="/dreams"
+                onClick={closeMenu}
+                className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors"
+              >
+                <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400">
+                  <List className="w-4 h-4" />
+                </div>
+                <span className="font-medium">My List</span>
+              </Link>
+            </SignedIn>
             <Link
               href="/about"
               onClick={closeMenu}

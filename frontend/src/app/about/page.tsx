@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import { useAuth } from "@clerk/nextjs";
 import { api } from "@/services/api";
 import { DreamEntry } from "@/types/dream";
 import { AboutHeader } from "@/components/about/AboutHeader";
@@ -14,22 +15,30 @@ import { TechStackSection } from "@/components/about/TechStackSection";
 import { MadeWithLoveSection } from "@/components/about/MadeWithLoveSection";
 
 export default function AboutPage() {
+  const { isSignedIn } = useAuth();
   const [dreams, setDreams] = useState<DreamEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadDreams = async () => {
+      // Only fetch dreams if user is authenticated
+      if (!isSignedIn) {
+        setLoading(false);
+        return;
+      }
+
       try {
         const data = await api.dreams.list();
         setDreams(data);
       } catch (error) {
+        // Silently fail - stats section will handle empty state
         console.error("Failed to load dreams for stats:", error);
       } finally {
         setLoading(false);
       }
     };
     loadDreams();
-  }, []);
+  }, [isSignedIn]);
 
   return (
     <div className="container mx-auto px-4 py-12 min-h-[calc(100vh-4rem)] max-w-6xl">
