@@ -14,9 +14,21 @@ app = FastAPI(title="MyDreams AI Engine")
 
 from fastapi.middleware.cors import CORSMiddleware
 
+# CORS configuration - allow localhost and production domains
+import os
+allowed_origins = [
+    "http://localhost:3000",
+    "http://localhost:3001",  # Alternative local port
+]
+
+# Add production frontend URL from environment variable
+frontend_url = os.getenv("FRONTEND_URL")
+if frontend_url:
+    allowed_origins.append(frontend_url)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
