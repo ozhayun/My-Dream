@@ -10,3 +10,9 @@
   NODE_VERSION = "20"
   NODE_OPTIONS = "--max-old-space-size=1024"
 
+[[headers]]
+  for = "/*"
+  [headers.values]
+    # Ensure microphone is allowed in production (can be overridden by Netlify UI headers)
+    Permissions-Policy = "microphone=(self)"
+

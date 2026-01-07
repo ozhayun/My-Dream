@@ -28,6 +28,8 @@ export function DreamInputSection() {
   const [interimTranscript, setInterimTranscript] = useState("");
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const isListeningRef = useRef(false);
+  const lastSpeechResultAtRef = useRef<number | null>(null);
+  const noResultTimeoutIdRef = useRef<number | null>(null);
   const router = useRouter();
   const [suggestions, setSuggestions] = useState<string[]>([]);
 
@@ -56,15 +58,35 @@ export function DreamInputSection() {
       const recognizer = new SpeechRecognition();
       recognizer.continuous = true;
       recognizer.interimResults = true;
-      recognizer.lang = "en-US";
+      // Prefer the user's browser language (e.g. "he-IL") to avoid "no results" when speaking non-English.
+      recognizer.lang = window.navigator.language || "en-US";
 
       recognizer.onstart = () => {
         console.log("Speech recognition started");
         isListeningRef.current = true;
+        lastSpeechResultAtRef.current = null;
         setIsListening(true);
+
+        // If we don't receive any results shortly after starting, surface a clear hint.
+        if (noResultTimeoutIdRef.current) {
+          window.clearTimeout(noResultTimeoutIdRef.current);
+        }
+        noResultTimeoutIdRef.current = window.setTimeout(() => {
+          // Only show if we're still listening and nothing arrived.
+          if (
+            isListeningRef.current &&
+            lastSpeechResultAtRef.current === null
+          ) {
+            setError(
+              "Voice input started but no speech was recognized. If you're on iPhone/iPad or Firefox, Web Speech may not be supported. Try Chrome/Edge on desktop, or use typing."
+            );
+            setTimeout(() => setError(""), 7000);
+          }
+        }, 4000);
       };
 
       recognizer.onresult = (event: SpeechRecognitionEvent) => {
+        lastSpeechResultAtRef.current = Date.now();
         console.log("onresult fired!", {
           resultIndex: event.resultIndex,
           resultsLength: event.results.length,
@@ -114,6 +136,10 @@ export function DreamInputSection() {
           "Speech recognition ended, isListening:",
           isListeningRef.current
         );
+        if (noResultTimeoutIdRef.current) {
+          window.clearTimeout(noResultTimeoutIdRef.current);
+          noResultTimeoutIdRef.current = null;
+        }
         // If we're still supposed to be listening, restart (continuous mode)
         if (isListeningRef.current && recognitionRef.current) {
           console.log("Restarting speech recognition...");
@@ -140,6 +166,10 @@ export function DreamInputSection() {
           event
         );
         setInterimTranscript("");
+        if (noResultTimeoutIdRef.current) {
+          window.clearTimeout(noResultTimeoutIdRef.current);
+          noResultTimeoutIdRef.current = null;
+        }
 
         // Provide user-friendly error messages
         let errorMessage = "";
@@ -204,6 +234,11 @@ export function DreamInputSection() {
   const toggleListening = () => {
     if (isListening) {
       isListeningRef.current = false;
+      lastSpeechResultAtRef.current = null;
+      if (noResultTimeoutIdRef.current) {
+        window.clearTimeout(noResultTimeoutIdRef.current);
+        noResultTimeoutIdRef.current = null;
+      }
       recognitionRef.current?.stop();
       setIsListening(false);
     } else {
