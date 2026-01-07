@@ -23,9 +23,7 @@ export function DreamJournalSection({
   const [newEntry, setNewEntry] = useState("");
   const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState("");
-  const [deleteLogEntryId, setDeleteLogEntryId] = useState<string | null>(
-    null
-  );
+  const [deleteLogEntryId, setDeleteLogEntryId] = useState<string | null>(null);
 
   const handleAddEntry = () => {
     if (!newEntry.trim()) return;
@@ -100,7 +98,7 @@ export function DreamJournalSection({
                   {editingEntryId === entry.id ? (
                     <>
                       <button
-                        onClick={() => handleEditEntry(entry.id, editContent)}
+                        onClick={() => handleEditEntry(entry.id)}
                         className="text-green-400 hover:text-green-300"
                       >
                         Save
@@ -191,4 +189,3 @@ export function DreamJournalSection({
     </div>
   );
 }
-
