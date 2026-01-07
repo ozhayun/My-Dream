@@ -12,14 +12,14 @@ export function DesktopNav() {
     <nav className="hidden md:flex items-center gap-6 shrink-0">
       <Link
         href="/"
-        className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2"
+        className="text-sm font-medium text-foreground/70 hover:text-foreground transition-colors flex items-center gap-2"
       >
         <Plus className="w-4 h-4" /> Add Dream
       </Link>
       <SignedIn>
         <Link
           href="/dreams"
-          className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2"
+          className="text-sm font-medium text-foreground/70 hover:text-foreground transition-colors flex items-center gap-2"
           onClick={(e) => {
             if (window.location.search || pathname === "/dreams") {
               e.preventDefault();
@@ -32,7 +32,7 @@ export function DesktopNav() {
       </SignedIn>
       <Link
         href="/about"
-        className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2"
+        className="text-sm font-medium text-foreground/70 hover:text-foreground transition-colors flex items-center gap-2"
       >
         <Info className="w-4 h-4" /> About
       </Link>

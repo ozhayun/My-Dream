@@ -29,13 +29,13 @@ export function StatisticsSection({ dreams, loading }: StatisticsSectionProps) {
         <div className="text-4xl font-bold text-blue-400 mb-2">
           {stats.total}
         </div>
-        <div className="text-muted-foreground">Total Dreams</div>
+        <div className="text-foreground/70">Total Dreams</div>
       </div>
       <div className="p-6 rounded-2xl bg-secondary/30 border border-white/5 backdrop-blur-sm text-center">
         <div className="text-4xl font-bold text-emerald-400 mb-2">
           {stats.completed}
         </div>
-        <div className="text-muted-foreground">Completed</div>
+        <div className="text-foreground/70">Completed</div>
       </div>
       <div className="p-6 rounded-2xl bg-secondary/30 border border-white/5 backdrop-blur-sm text-center">
         <div className="text-4xl font-bold text-purple-400 mb-2">
@@ -44,7 +44,7 @@ export function StatisticsSection({ dreams, loading }: StatisticsSectionProps) {
             : 0}
           %
         </div>
-        <div className="text-muted-foreground">Completion Rate</div>
+        <div className="text-foreground/70">Completion Rate</div>
       </div>
     </motion.div>
   );

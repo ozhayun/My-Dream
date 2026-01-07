@@ -44,7 +44,7 @@ export function DreamTimeline({ dreams, onDreamClick, onToggleStatus }: DreamTim
                                 <div className="flex justify-between items-start mb-2">
                                     <span className={clsx(
                                         "text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded-full border",
-                                        CATEGORY_COLORS[dream.category] ? CATEGORY_COLORS[dream.category].replace("bg-", "bg-opacity-20 bg-") : "bg-secondary text-muted-foreground"
+                                        CATEGORY_COLORS[dream.category] ? CATEGORY_COLORS[dream.category].replace("bg-", "bg-opacity-20 bg-") : "bg-secondary text-foreground/70"
                                     )}>
                                         {dream.category}
                                     </span>
@@ -55,7 +55,7 @@ export function DreamTimeline({ dreams, onDreamClick, onToggleStatus }: DreamTim
                                         }}
                                         className="p-1 hover:text-primary transition-colors"
                                     >
-                                        {dream.completed ? <CheckCircle2 className="w-5 h-5 text-green-500" /> : <Circle className="w-5 h-5 text-muted-foreground" />}
+                                        {dream.completed ? <CheckCircle2 className="w-5 h-5 text-green-500" /> : <Circle className="w-5 h-5 text-foreground/70" />}
                                     </button>
                                 </div>
                                 <h4 className={clsx("font-medium transition-all group-hover:text-primary", dream.completed && "line-through")}>

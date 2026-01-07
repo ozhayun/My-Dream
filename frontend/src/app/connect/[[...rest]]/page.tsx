@@ -26,10 +26,10 @@ export default function ConnectPage() {
         className="w-full"
       >
         <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold mb-2 bg-linear-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
             Sign In
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-foreground/70">
             Sign in to start managing your dreams
           </p>
         </div>

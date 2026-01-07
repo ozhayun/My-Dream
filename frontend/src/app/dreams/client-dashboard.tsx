@@ -22,14 +22,14 @@ export function ClientCategoryDashboard({ dreams, isSearch }: { dreams: DreamEnt
                             onClick={() => router.push(`/dreams/detail/${d.id}`)}
                         >
                             <h3 className="font-semibold text-lg mb-2">{d.title}</h3>
-                            <div className="flex justify-between text-xs text-muted-foreground">
+                            <div className="flex justify-between text-xs text-foreground/70">
                                 <span>{d.category}</span>
                                 <span>{d.suggested_target_year}</span>
                             </div>
                         </div>
                     ))}
                     {dreams.length === 0 && (
-                        <div className="col-span-full py-20 text-center text-muted-foreground">
+                        <div className="col-span-full py-20 text-center text-foreground/70">
                             No dreams found matching your search.
                         </div>
                     )}

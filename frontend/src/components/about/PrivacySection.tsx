@@ -27,7 +27,7 @@ export function PrivacySection() {
             <Lock className="w-5 h-5" />
             Privacy First
           </h3>
-          <p className="text-muted-foreground mb-4">
+          <p className="text-foreground/70 mb-4">
             Your dreams are yours alone. All data is encrypted and stored securely. Only you can access your dreams through secure authentication.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">

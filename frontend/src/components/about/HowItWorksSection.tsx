@@ -45,16 +45,14 @@ export function HowItWorksSection() {
                 >
                   <Icon className={`w-6 h-6 ${step.color}`} />
                 </div>
-                <div className="text-sm font-semibold text-muted-foreground">
+                <div className="text-sm font-semibold text-foreground/70">
                   Step {index + 1}
                 </div>
               </div>
               <h3 className="text-xl font-semibold mb-2">{step.title}</h3>
-              <p className="text-muted-foreground text-sm">
-                {step.description}
-              </p>
+              <p className="text-foreground/70 text-sm">{step.description}</p>
               {index < HOW_IT_WORKS_STEPS.length - 1 && (
-                <ArrowRight className="hidden lg:block absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 text-muted-foreground/30" />
+                <ArrowRight className="hidden lg:block absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 text-foreground/70/30" />
               )}
             </motion.div>
           );

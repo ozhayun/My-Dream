@@ -61,7 +61,7 @@ export function DreamDashboard() {
 
         {dreams.length === 0 ? (
           <div className="bg-secondary/30 border border-white/10 rounded-lg p-8 text-center">
-            <p className="text-muted-foreground">
+            <p className="text-foreground/70">
               No dreams yet. Add your first dream above!
             </p>
           </div>
@@ -80,10 +80,10 @@ export function DreamDashboard() {
                     </span>
                   )}
                 </div>
-                <p className="text-sm text-muted-foreground mb-2">
+                <p className="text-sm text-foreground/70 mb-2">
                   {dream.category}
                 </p>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-foreground/70">
                   Target: {dream.suggested_target_year}
                 </p>
               </div>

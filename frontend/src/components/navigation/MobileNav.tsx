@@ -2,19 +2,54 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { List, Info, Menu, X } from "lucide-react";
+import { List, Info, Menu, X, Search } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+import { useAuth } from "@clerk/nextjs";
+import { useRouter, usePathname } from "next/navigation";
 
 export function MobileNav() {
   const [isOpen, setIsOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const { isSignedIn } = useAuth();
+  const router = useRouter();
+  const pathname = usePathname();
+  
+  // Hide search on certain pages
+  const shouldHideSearch =
+    pathname === "/" || pathname === "/about" || pathname === "/connect";
 
   const closeMenu = () => setIsOpen(false);
+
+  const handleMobileSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      if (!isSignedIn) {
+        router.push("/connect");
+        return;
+      }
+      if (searchQuery.trim()) {
+        setIsSearchOpen(false);
+        setSearchQuery("");
+        window.location.href = `/dreams?q=${encodeURIComponent(searchQuery)}`;
+      }
+    }
+  };
 
   return (
     <>
       {/* Mobile Header Controls */}
-      <div className="md:hidden flex items-center gap-3 z-50">
+      <div className="md:hidden flex items-center gap-2 z-50">
+        {/* Mobile Search Button - Only show when search is allowed */}
+        {!shouldHideSearch && (
+          <button
+            className="p-2 text-foreground/70 hover:text-foreground transition-colors"
+            onClick={() => setIsSearchOpen(!isSearchOpen)}
+            aria-label={isSearchOpen ? "Close search" : "Open search"}
+          >
+            <Search className="w-5 h-5" />
+          </button>
+        )}
         <SignedOut>
           <Link
             href="/connect"
@@ -34,13 +69,40 @@ export function MobileNav() {
           />
         </SignedIn>
         <button
-          className="p-2 text-muted-foreground hover:text-foreground"
+          className="p-2 text-foreground/70 hover:text-foreground transition-colors"
           onClick={() => setIsOpen(!isOpen)}
           aria-label={isOpen ? "Close menu" : "Open menu"}
         >
           {isOpen ? <X /> : <Menu />}
         </button>
       </div>
+
+      {/* Mobile Search Input */}
+      <AnimatePresence>
+        {isSearchOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="absolute top-full left-0 right-0 bg-background/95 backdrop-blur-xl border-b border-white/10 p-4 md:hidden z-40"
+          >
+            <div className="relative">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/70">
+                <Search className="w-4 h-4" />
+              </div>
+              <input
+                type="text"
+                placeholder="Search dreams..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={handleMobileSearch}
+                className="w-full bg-secondary/30 border border-white/5 rounded-full py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-1 focus:ring-primary/50 transition-all backdrop-blur-sm"
+                autoFocus
+              />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Mobile Menu Overlay */}
       <AnimatePresence>

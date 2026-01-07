@@ -78,7 +78,7 @@ export function EditDreamModal({ dream, open, onOpenChange, onSave }: EditDreamM
                     id="category"
                     value={category}
                     onChange={(e) => setCategory(e.target.value as DreamCategory)}
-                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-foreground/70 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                 >
                     {CATEGORIES.map(cat => (
                         <option key={cat} value={cat} className="bg-background text-foreground">{cat}</option>
@@ -135,7 +135,7 @@ export function EditDreamModal({ dream, open, onOpenChange, onSave }: EditDreamM
                 <div key={m.id} className="flex items-center gap-3 p-2 bg-secondary/30 rounded-lg text-xs">
                   <div className="w-1.5 h-1.5 rounded-full bg-primary" />
                   <span className="flex-1">{m.title}</span>
-                  <span className="text-muted-foreground font-medium">{m.target_year}</span>
+                  <span className="text-foreground/70 font-medium">{m.target_year}</span>
                 </div>
               ))}
             </div>

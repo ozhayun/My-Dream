@@ -44,12 +44,12 @@ export function ClientStatusWrapper({ dreams }: { dreams: DreamEntry[] }) {
                                 <div className="font-medium flex-1 group-hover:text-primary transition-colors">{d.title}</div>
                                 <button 
                                     onClick={(e) => handleToggle(e, d)}
-                                    className="p-1 text-muted-foreground hover:text-primary transition-colors"
+                                    className="p-1 text-foreground/70 hover:text-primary transition-colors"
                                 >
                                     <Circle className="w-5 h-5" />
                                 </button>
                             </div>
-                            <div className="text-xs text-muted-foreground mt-2 flex justify-between">
+                            <div className="text-xs text-foreground/70 mt-2 flex justify-between">
                                 <span className="bg-white/5 px-2 py-0.5 rounded-full">{d.category}</span>
                                 <span className="font-mono">{d.suggested_target_year}</span>
                             </div>
@@ -77,7 +77,7 @@ export function ClientStatusWrapper({ dreams }: { dreams: DreamEntry[] }) {
                                     <CheckCircle2 className="w-5 h-5" />
                                 </button>
                             </div>
-                            <div className="text-xs text-muted-foreground mt-2 flex justify-between">
+                            <div className="text-xs text-foreground/70 mt-2 flex justify-between">
                                 <span className="bg-green-500/10 text-green-400 px-2 py-0.5 rounded-full">{d.category}</span>
                                 <span className="font-mono">{d.suggested_target_year}</span>
                             </div>

@@ -131,7 +131,7 @@ function KanbanCard({ dream, isOverlay }: { dream: DreamEntry, isOverlay?: boole
             )}
          >
             <h4 className="font-medium mb-1 group-hover:text-primary transition-colors line-clamp-3 text-sm leading-tight">{dream.title}</h4>
-            <span className="text-xs text-muted-foreground">{dream.suggested_target_year}</span>
+            <span className="text-xs text-foreground/70">{dream.suggested_target_year}</span>
          </div>
     );
 }

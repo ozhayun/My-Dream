@@ -36,7 +36,7 @@ export function ClientCategoryDetailWrapper({ dreams }: { dreams: DreamEntry[] }
                     onClick={() => router.push(`/dreams/detail/${d.id}`)}
                 >
                     <div className="flex justify-between items-start mb-4">
-                    <h3 className={clsx("font-semibold text-lg", d.completed && "line-through text-muted-foreground")}>
+                    <h3 className={clsx("font-semibold text-lg", d.completed && "line-through text-foreground/70")}>
                         {d.title}
                     </h3>
                     {d.is_polished && (
@@ -46,7 +46,7 @@ export function ClientCategoryDetailWrapper({ dreams }: { dreams: DreamEntry[] }
                     )}
                     </div>
                     
-                    <p className="text-sm text-muted-foreground">Target: {d.suggested_target_year}</p>
+                    <p className="text-sm text-foreground/70">Target: {d.suggested_target_year}</p>
                     
                     <div className="flex gap-2 mt-6 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button 

@@ -64,10 +64,8 @@ export function FeaturesSection() {
             >
               <Icon className={`w-8 h-8 ${feature.iconColor} mb-4`} />
               <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
-              <p className="text-muted-foreground mb-4">
-                {feature.description}
-              </p>
-              <ul className="text-sm text-muted-foreground space-y-1">
+              <p className="text-foreground/70 mb-4">{feature.description}</p>
+              <ul className="text-sm text-foreground/70 space-y-1">
                 {feature.bullets.map((bullet, i) => (
                   <li key={i}>• {bullet}</li>
                 ))}

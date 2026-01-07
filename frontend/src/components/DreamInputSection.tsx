@@ -190,7 +190,7 @@ export function DreamInputSection() {
                   : "I want to learn piano, travel to Mars, and build a robot..."
               }
               className={clsx(
-                "w-full bg-transparent border-none focus:ring-0 text-lg placeholder:text-muted-foreground/40 resize-none min-h-[80px] max-h-[300px] outline-none pr-28 custom-scrollbar transition-opacity",
+                "w-full bg-transparent border-none focus:ring-0 text-lg placeholder:text-foreground/70/40 resize-none min-h-[80px] max-h-[300px] outline-none pr-28 custom-scrollbar transition-opacity",
                 isListening && "opacity-70"
               )}
             />
@@ -203,7 +203,7 @@ export function DreamInputSection() {
                   "w-10 h-10 flex items-center justify-center rounded-full transition-all shadow-lg",
                   isListening
                     ? "bg-red-500 text-white animate-pulse"
-                    : "bg-secondary/50 text-muted-foreground hover:bg-secondary/80"
+                    : "bg-secondary/50 text-foreground/70 hover:bg-secondary/80"
                 )}
                 title={isListening ? "Stop Recording" : "Speak your dream"}
               >

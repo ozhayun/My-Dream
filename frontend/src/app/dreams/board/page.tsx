@@ -15,7 +15,7 @@ export default async function BoardPage() {
       <div className="min-h-[500px]">
         <div className="md:hidden flex flex-col items-center justify-center py-20 text-center px-4">
           <div className="bg-secondary/20 p-6 rounded-2xl">
-            <p className="text-muted-foreground">
+            <p className="text-foreground/70">
               The Board view is optimized for desktop screens.
             </p>
             <p className="text-sm mt-2">

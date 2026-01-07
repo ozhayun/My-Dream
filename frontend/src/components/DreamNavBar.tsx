@@ -26,7 +26,7 @@ export function DreamNavBar() {
                      <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">
                          {activeItem?.label || "My Dreams"}
                      </h1>
-                     <p className="text-muted-foreground mt-1">Manage your life goals.</p>
+                     <p className="text-foreground/70 mt-1">Manage your life goals.</p>
                  </div>
 
                  <div className="flex justify-center md:justify-end w-full md:w-auto overflow-x-auto">
@@ -45,7 +45,7 @@ export function DreamNavBar() {
                                      "flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap",
                                      isActive 
                                          ? "bg-primary text-primary-foreground shadow-lg" 
-                                         : "text-muted-foreground hover:text-foreground hover:bg-white/5"
+                                         : "text-foreground/70 hover:text-foreground hover:bg-white/5"
                                  )}
                              >
                                 <Icon className="w-4 h-4" />

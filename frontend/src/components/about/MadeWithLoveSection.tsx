@@ -13,7 +13,7 @@ export function MadeWithLoveSection() {
     >
       <Heart className="w-8 h-8 text-pink-400 mx-auto mb-4" />
       <h3 className="text-xl font-semibold mb-2">Made with Love</h3>
-      <p className="text-muted-foreground">
+      <p className="text-foreground/70">
         Built to inspire and help you track your life&apos;s most meaningful
         goals. Your dreams matter, and we&apos;re here to help you achieve
         them.

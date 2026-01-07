@@ -31,18 +31,18 @@ export function SearchBar({ isHidden = false }: SearchBarProps) {
   return (
     <div
       className={clsx(
-        "absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md px-4 transition-all duration-300 pointer-events-none lg:pointer-events-auto",
-        isHidden ? "opacity-0 invisible" : "opacity-100 visible"
+        "hidden md:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md px-4 transition-all duration-300",
+        isHidden ? "opacity-0 invisible pointer-events-none" : "opacity-100 visible pointer-events-auto"
       )}
     >
       <div className="relative w-full">
-        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/70 z-10">
           <Search className="w-4 h-4" />
         </div>
         <input
           type="text"
           placeholder="Search dreams..."
-          className="w-full bg-secondary/30 border border-white/5 rounded-full py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-1 focus:ring-primary/50 transition-all backdrop-blur-sm pointer-events-auto"
+          className="w-full bg-secondary/30 border border-white/5 rounded-full py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-1 focus:ring-primary/50 transition-all backdrop-blur-sm"
           onKeyDown={handleSearch}
         />
       </div>
