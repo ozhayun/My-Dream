@@ -163,7 +163,9 @@ export function DreamInputSection() {
           "Speech recognition error:",
           event.error,
           "Full event:",
-          event
+          event,
+          "Is listening:",
+          isListeningRef.current
         );
         setInterimTranscript("");
         if (noResultTimeoutIdRef.current) {
@@ -187,7 +189,7 @@ export function DreamInputSection() {
             break;
           case "network":
             errorMessage =
-              "Network error. Please check your internet connection.";
+              "Network error connecting to speech service. Please check your internet connection and try again.";
             break;
           case "aborted":
             // User stopped, don't show error
@@ -199,14 +201,14 @@ export function DreamInputSection() {
             break;
           case "service-not-allowed":
             errorMessage =
-              "Speech recognition service is not available. Please try again later.";
+              "Speech recognition service is not available. This might be blocked in your network or region. Please try again later or use typing.";
             break;
           default:
             if (!isSecureContext) {
               errorMessage =
                 "Speech recognition requires HTTPS. Please access this site over a secure connection.";
             } else {
-              errorMessage = `Speech recognition error: ${event.error}. Please try again.`;
+              errorMessage = `Speech recognition error: ${event.error}. This might be a network or service issue. Please try again or use typing.`;
             }
         }
 
@@ -217,8 +219,8 @@ export function DreamInputSection() {
 
         if (errorMessage) {
           setError(errorMessage);
-          // Clear error after 5 seconds
-          setTimeout(() => setError(""), 5000);
+          // Clear error after 7 seconds
+          setTimeout(() => setError(""), 7000);
         }
       };
 
@@ -231,7 +233,7 @@ export function DreamInputSection() {
     }
   }, []);
 
-  const toggleListening = () => {
+  const toggleListening = async () => {
     if (isListening) {
       isListeningRef.current = false;
       lastSpeechResultAtRef.current = null;
@@ -251,13 +253,40 @@ export function DreamInputSection() {
 
       try {
         setError("");
+
+        // Explicitly request microphone permission first
+        // This helps ensure permissions are properly granted in production
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            audio: true,
+          });
+          // Permission granted, stop the stream immediately (we just needed permission)
+          stream.getTracks().forEach((track) => track.stop());
+          console.log("Microphone permission confirmed");
+        } catch (permError) {
+          console.error("Microphone permission error:", permError);
+          setError(
+            "Microphone access is required. Please allow microphone permissions and try again."
+          );
+          setTimeout(() => setError(""), 5000);
+          return;
+        }
+
+        // Small delay to ensure permission is fully processed
+        await new Promise((resolve) => setTimeout(resolve, 100));
+
+        // Now start speech recognition
         recognitionRef.current.start();
+        console.log("Speech recognition start() called");
         // Note: setIsListening will be set by onstart handler
       } catch (err) {
         console.error("Error starting speech recognition:", err);
+        isListeningRef.current = false;
         setIsListening(false);
         setError(
-          "Failed to start voice input. Please check microphone permissions and try again."
+          `Failed to start voice input: ${
+            err instanceof Error ? err.message : "Unknown error"
+          }. Please check microphone permissions and try again.`
         );
         setTimeout(() => setError(""), 5000);
       }
