@@ -58,8 +58,10 @@ export function DreamInputSection() {
       const recognizer = new SpeechRecognition();
       recognizer.continuous = true;
       recognizer.interimResults = true;
-      // Prefer the user's browser language (e.g. "he-IL") to avoid "no results" when speaking non-English.
-      recognizer.lang = window.navigator.language || "en-US";
+      // Use English for better compatibility in production
+      // Hebrew (he-IL) may not be well supported by Google's speech service in all regions
+      recognizer.lang = "en-US";
+      console.log("Speech recognition language:", recognizer.lang);
 
       recognizer.onstart = () => {
         console.log("Speech recognition started");
