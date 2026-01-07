@@ -274,14 +274,38 @@ export async function updateDreamAction(dreamId: string, updates: Partial<DreamE
             throw new Error("User not authenticated");
         }
 
+        // Build update object with only defined values
+        const updateData: Record<string, unknown> = {};
+        if (updates.title !== undefined) updateData.title = updates.title;
+        if (updates.category !== undefined) updateData.category = updates.category;
+        if (updates.suggested_target_year !== undefined) updateData.suggested_target_year = updates.suggested_target_year;
+        if (updates.completed !== undefined) updateData.completed = updates.completed;
+
+        // If no fields to update, return current dream
+        if (Object.keys(updateData).length === 0) {
+            const { data: currentDream } = await supabase
+                .from("dreams")
+                .select("*")
+                .eq("id", dreamId)
+                .eq("user_id", userId)
+                .single();
+            
+            if (!currentDream) {
+                throw new Error("Dream not found");
+            }
+
+            return {
+                id: currentDream.id,
+                title: currentDream.title,
+                category: currentDream.category,
+                suggested_target_year: currentDream.suggested_target_year,
+                completed: currentDream.completed || false,
+            };
+        }
+
         const { data, error } = await supabase
             .from("dreams")
-            .update({
-                title: updates.title,
-                category: updates.category,
-                suggested_target_year: updates.suggested_target_year,
-                completed: updates.completed,
-            })
+            .update(updateData)
             .eq("id", dreamId)
             .eq("user_id", userId)
             .select()
@@ -290,6 +314,10 @@ export async function updateDreamAction(dreamId: string, updates: Partial<DreamE
         if (error) {
             console.error("Supabase error:", error);
             throw new Error(`Failed to update dream: ${error.message}`);
+        }
+
+        if (!data) {
+            throw new Error("Dream not found or no changes made");
         }
 
         revalidatePath("/dreams");
