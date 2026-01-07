@@ -57,6 +57,11 @@ export function DreamInputSection() {
       recognizer.interimResults = true;
       recognizer.lang = "en-US";
 
+      recognizer.onstart = () => {
+        console.log("Speech recognition started");
+        setIsListening(true);
+      };
+
       recognizer.onresult = (event: SpeechRecognitionEvent) => {
         let finalTranscript = "";
         let currentInterim = "";
@@ -71,14 +76,25 @@ export function DreamInputSection() {
         }
 
         if (finalTranscript) {
-          setDreamText((prev) => (prev.trim() + " " + finalTranscript).trim());
+          setDreamText((prev) => {
+            const newText = (prev.trim() + " " + finalTranscript).trim();
+            console.log(
+              "Final transcript:",
+              finalTranscript,
+              "New text:",
+              newText
+            );
+            return newText;
+          });
           setInterimTranscript("");
-        } else {
+        } else if (currentInterim) {
+          console.log("Interim transcript:", currentInterim);
           setInterimTranscript(currentInterim);
         }
       };
 
       recognizer.onend = () => {
+        console.log("Speech recognition ended");
         setIsListening(false);
         setInterimTranscript("");
       };
@@ -130,7 +146,7 @@ export function DreamInputSection() {
     }
   }, []);
 
-  const toggleListening = async () => {
+  const toggleListening = () => {
     if (isListening) {
       recognitionRef.current?.stop();
       setIsListening(false);
@@ -142,20 +158,15 @@ export function DreamInputSection() {
         return;
       }
 
-      // Check for microphone permissions before starting
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          audio: true,
-        });
-        // Permission granted, stop the stream and start recognition
-        stream.getTracks().forEach((track) => track.stop());
         setError("");
         recognitionRef.current.start();
-        setIsListening(true);
+        // Note: setIsListening will be set by onstart handler
       } catch (err) {
-        console.error("Microphone permission error:", err);
+        console.error("Error starting speech recognition:", err);
+        setIsListening(false);
         setError(
-          "Microphone access is required for voice input. Please allow microphone permissions and try again."
+          "Failed to start voice input. Please check microphone permissions and try again."
         );
         setTimeout(() => setError(""), 5000);
       }
