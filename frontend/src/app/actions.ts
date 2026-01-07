@@ -2,9 +2,31 @@
 
 import { DreamEntry, SMARTGoal, DreamCategory } from "@/types/dream";
 import { revalidatePath } from "next/cache";
-import { auth } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { supabase } from "@/lib/supabase";
 import Groq from "groq-sdk";
+
+// Helper: Ensure user exists in Supabase (fallback if webhook didn't fire)
+async function ensureUserExists(userId: string) {
+  // Check if user exists
+  const { data: existingUser } = await supabase
+    .from("users")
+    .select("id")
+    .eq("id", userId)
+    .single();
+
+  if (!existingUser) {
+    // Get user info from Clerk
+    const user = await currentUser();
+    if (user) {
+      await supabase.from("users").insert({
+        id: userId,
+        email: user.emailAddresses[0]?.emailAddress || "",
+        avatar_url: user.imageUrl || null,
+      });
+    }
+  }
+}
 
 export async function createDreamsAction(text: string) {
     try {
@@ -101,6 +123,9 @@ export async function saveDreamsBatchAction(dreams: DreamEntry[]) {
         if (!userId) {
             throw new Error("User not authenticated");
         }
+
+        // Ensure user exists in Supabase (fallback if webhook didn't fire)
+        await ensureUserExists(userId);
 
         // Save each dream individually to Supabase
         const savedDreams = [];
@@ -365,6 +390,9 @@ export async function saveDream(
     if (!userId) {
       throw new Error("User not authenticated");
     }
+
+    // Ensure user exists in Supabase (fallback if webhook didn't fire)
+    await ensureUserExists(userId);
 
     // Initialize Groq client
     const groqApiKey = process.env.GROQ_API_KEY;
