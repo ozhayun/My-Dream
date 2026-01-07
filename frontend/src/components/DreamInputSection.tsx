@@ -27,6 +27,7 @@ export function DreamInputSection() {
   const [isListening, setIsListening] = useState(false);
   const [interimTranscript, setInterimTranscript] = useState("");
   const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const isListeningRef = useRef(false);
   const router = useRouter();
   const [suggestions, setSuggestions] = useState<string[]>([]);
 
@@ -59,28 +60,41 @@ export function DreamInputSection() {
 
       recognizer.onstart = () => {
         console.log("Speech recognition started");
+        isListeningRef.current = true;
         setIsListening(true);
       };
 
       recognizer.onresult = (event: SpeechRecognitionEvent) => {
+        console.log("onresult fired!", {
+          resultIndex: event.resultIndex,
+          resultsLength: event.results.length,
+          results: event.results,
+        });
+
         let finalTranscript = "";
         let currentInterim = "";
 
         for (let i = event.resultIndex; i < event.results.length; i++) {
-          const transcript = event.results[i][0].transcript;
-          if (event.results[i].isFinal) {
-            finalTranscript += transcript;
+          const result = event.results[i];
+          const transcript = result[0]?.transcript || "";
+          console.log(`Result ${i}:`, {
+            transcript,
+            isFinal: result.isFinal,
+          });
+
+          if (result.isFinal) {
+            finalTranscript += transcript + " ";
           } else {
             currentInterim += transcript;
           }
         }
 
-        if (finalTranscript) {
+        if (finalTranscript.trim()) {
           setDreamText((prev) => {
-            const newText = (prev.trim() + " " + finalTranscript).trim();
+            const newText = (prev.trim() + " " + finalTranscript.trim()).trim();
             console.log(
               "Final transcript:",
-              finalTranscript,
+              finalTranscript.trim(),
               "New text:",
               newText
             );
@@ -90,29 +104,56 @@ export function DreamInputSection() {
         } else if (currentInterim) {
           console.log("Interim transcript:", currentInterim);
           setInterimTranscript(currentInterim);
+        } else {
+          console.log("No transcript found in results");
         }
       };
 
       recognizer.onend = () => {
-        console.log("Speech recognition ended");
-        setIsListening(false);
-        setInterimTranscript("");
+        console.log(
+          "Speech recognition ended, isListening:",
+          isListeningRef.current
+        );
+        // If we're still supposed to be listening, restart (continuous mode)
+        if (isListeningRef.current && recognitionRef.current) {
+          console.log("Restarting speech recognition...");
+          try {
+            recognitionRef.current.start();
+          } catch (err) {
+            console.error("Error restarting recognition:", err);
+            isListeningRef.current = false;
+            setIsListening(false);
+            setInterimTranscript("");
+          }
+        } else {
+          isListeningRef.current = false;
+          setIsListening(false);
+          setInterimTranscript("");
+        }
       };
 
       recognizer.onerror = (event: SpeechRecognitionErrorEvent) => {
-        console.error("Speech recognition error", event.error);
-        setIsListening(false);
+        console.error(
+          "Speech recognition error:",
+          event.error,
+          "Full event:",
+          event
+        );
         setInterimTranscript("");
 
         // Provide user-friendly error messages
         let errorMessage = "";
+        let shouldStop = true;
+
         switch (event.error) {
           case "not-allowed":
             errorMessage =
               "Microphone access denied. Please allow microphone permissions in your browser settings.";
             break;
           case "no-speech":
-            errorMessage = "No speech detected. Please try speaking again.";
+            // Don't stop on no-speech, just keep listening
+            console.log("No speech detected, continuing to listen...");
+            shouldStop = false;
             break;
           case "network":
             errorMessage =
@@ -120,6 +161,15 @@ export function DreamInputSection() {
             break;
           case "aborted":
             // User stopped, don't show error
+            shouldStop = false;
+            break;
+          case "audio-capture":
+            errorMessage =
+              "No microphone found. Please connect a microphone and try again.";
+            break;
+          case "service-not-allowed":
+            errorMessage =
+              "Speech recognition service is not available. Please try again later.";
             break;
           default:
             if (!isSecureContext) {
@@ -128,6 +178,11 @@ export function DreamInputSection() {
             } else {
               errorMessage = `Speech recognition error: ${event.error}. Please try again.`;
             }
+        }
+
+        if (shouldStop) {
+          isListeningRef.current = false;
+          setIsListening(false);
         }
 
         if (errorMessage) {
@@ -148,6 +203,7 @@ export function DreamInputSection() {
 
   const toggleListening = () => {
     if (isListening) {
+      isListeningRef.current = false;
       recognitionRef.current?.stop();
       setIsListening(false);
     } else {
