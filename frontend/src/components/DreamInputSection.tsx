@@ -36,10 +36,16 @@ export function DreamInputSection() {
   }, []);
 
   useEffect(() => {
-    if (
-      typeof window !== "undefined" &&
-      ("webkitSpeechRecognition" in window || "speechRecognition" in window)
-    ) {
+    if (typeof window === "undefined") return;
+
+    // Check if we're in a secure context (HTTPS or localhost)
+    const isSecureContext =
+      window.isSecureContext ||
+      window.location.protocol === "https:" ||
+      window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1";
+
+    if ("webkitSpeechRecognition" in window || "speechRecognition" in window) {
       const windowWithSR = window as unknown as WindowWithSpeechRecognition;
       const SpeechRecognition =
         windowWithSR.webkitSpeechRecognition || windowWithSR.speechRecognition;
@@ -81,24 +87,78 @@ export function DreamInputSection() {
         console.error("Speech recognition error", event.error);
         setIsListening(false);
         setInterimTranscript("");
+
+        // Provide user-friendly error messages
+        let errorMessage = "";
+        switch (event.error) {
+          case "not-allowed":
+            errorMessage =
+              "Microphone access denied. Please allow microphone permissions in your browser settings.";
+            break;
+          case "no-speech":
+            errorMessage = "No speech detected. Please try speaking again.";
+            break;
+          case "network":
+            errorMessage =
+              "Network error. Please check your internet connection.";
+            break;
+          case "aborted":
+            // User stopped, don't show error
+            break;
+          default:
+            if (!isSecureContext) {
+              errorMessage =
+                "Speech recognition requires HTTPS. Please access this site over a secure connection.";
+            } else {
+              errorMessage = `Speech recognition error: ${event.error}. Please try again.`;
+            }
+        }
+
+        if (errorMessage) {
+          setError(errorMessage);
+          // Clear error after 5 seconds
+          setTimeout(() => setError(""), 5000);
+        }
       };
 
       recognitionRef.current = recognizer;
+    } else if (!isSecureContext) {
+      // Speech recognition not available and not in secure context
+      console.warn(
+        "Speech recognition requires HTTPS in production environments."
+      );
     }
   }, []);
 
-  const toggleListening = () => {
+  const toggleListening = async () => {
     if (isListening) {
       recognitionRef.current?.stop();
       setIsListening(false);
     } else {
       if (!recognitionRef.current) {
-        setError("Speech recognition is not supported in this browser.");
+        setError(
+          "Speech recognition is not supported in this browser. Please use Chrome, Edge, or Safari."
+        );
         return;
       }
-      setError("");
-      recognitionRef.current.start();
-      setIsListening(true);
+
+      // Check for microphone permissions before starting
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+        });
+        // Permission granted, stop the stream and start recognition
+        stream.getTracks().forEach((track) => track.stop());
+        setError("");
+        recognitionRef.current.start();
+        setIsListening(true);
+      } catch (err) {
+        console.error("Microphone permission error:", err);
+        setError(
+          "Microphone access is required for voice input. Please allow microphone permissions and try again."
+        );
+        setTimeout(() => setError(""), 5000);
+      }
     }
   };
 
