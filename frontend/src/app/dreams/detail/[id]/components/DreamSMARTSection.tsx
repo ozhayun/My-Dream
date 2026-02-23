@@ -8,6 +8,21 @@ interface DreamSMARTSectionProps {
   isPolishing: boolean;
 }
 
+/** Render a SMART field value safely; backend may return objects instead of strings. */
+function formatSmartValue(value: unknown): string {
+  if (value == null) return "";
+  if (typeof value === "string") return value;
+  if (typeof value === "number") return String(value);
+  if (typeof value === "object") {
+    // Flatten object to readable text (e.g. { technical_skills, musical_expression } -> "technical_skills: ..., musical_expression: ...")
+    const parts = Object.entries(value).map(
+      ([k, v]) => `${k}: ${typeof v === "object" && v !== null ? JSON.stringify(v) : v}`
+    );
+    return parts.join(" • ");
+  }
+  return String(value);
+}
+
 export function DreamSMARTSection({
   smartData,
   isPolishing,
@@ -38,17 +53,19 @@ export function DreamSMARTSection({
           { label: "Achievable", value: smartData?.achievable },
           { label: "Relevant", value: smartData?.relevant },
           { label: "Time-bound", value: smartData?.time_bound },
-        ].map((item) => (
-          <div key={item.label} className="space-y-1">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-primary/60">
-              {item.label}
-            </span>
-            <p className="text-sm leading-relaxed text-foreground/70 min-h-[1.5em]">
-              {item.value ||
-                (isPolishing ? "Generating..." : "Not yet defined")}
-            </p>
-          </div>
-        ))}
+        ].map((item) => {
+          const text = formatSmartValue(item.value);
+          return (
+            <div key={item.label} className="space-y-1">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-primary/60">
+                {item.label}
+              </span>
+              <p className="text-sm leading-relaxed text-foreground/70 min-h-[1.5em]">
+                {text || (isPolishing ? "Generating..." : "Not yet defined")}
+              </p>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

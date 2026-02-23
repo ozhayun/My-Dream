@@ -206,6 +206,7 @@ export function DreamInputSection() {
   };
 
   const handleSaveDreams = async (dreamsToSave: DreamEntry[]) => {
+    setError(""); // Clear previous error when user retries
     try {
       await saveDreamsBatchAction(dreamsToSave);
       router.push("/dreams");
@@ -325,7 +326,11 @@ export function DreamInputSection() {
         <DreamReviewModal
           dreams={analyzedDreams}
           onSave={handleSaveDreams}
-          onCancel={() => setShowReviewModal(false)}
+          onCancel={() => {
+            setShowReviewModal(false);
+            setError("");
+          }}
+          saveError={error || undefined}
         />
       )}
     </div>

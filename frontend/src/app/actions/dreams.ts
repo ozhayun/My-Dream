@@ -12,6 +12,19 @@ import { auth } from "@clerk/nextjs/server";
 import { supabase } from "@/lib/supabase";
 import { ensureUserExists } from "./helpers";
 
+/** Turn Supabase/network errors into a message the user can act on. */
+function normalizeSupabaseError(message: string, context: "fetch" | "save"): string {
+  const isNetworkError =
+    message.includes("fetch failed") ||
+    message.includes("ECONNREFUSED") ||
+    message.includes("ENOTFOUND") ||
+    message.includes("network");
+  if (isNetworkError) {
+    return `Cannot reach Supabase. Check that your Supabase project is resumed (Dashboard → your project → Resume) and your network allows outbound HTTPS. ${context === "fetch" ? "Failed to load dreams." : "Failed to save dreams."}`;
+  }
+  return message;
+}
+
 /**
  * Get all dreams for the current user
  */
@@ -30,7 +43,9 @@ export async function getDreams() {
       .order("created_at", { ascending: false });
 
     if (error) {
-      throw new Error(`Failed to fetch dreams: ${error.message}`);
+      throw new Error(
+        normalizeSupabaseError(error.message, "fetch") || "Failed to fetch dreams"
+      );
     }
 
     // Transform Supabase data to match DreamEntry interface
@@ -100,7 +115,9 @@ export async function saveDreamsBatchAction(dreams: DreamEntry[]) {
         .single();
 
       if (error) {
-        throw new Error(`Failed to save dream: ${error.message}`);
+        throw new Error(
+          normalizeSupabaseError(error.message, "save") || "Failed to save dream"
+        );
       }
 
       savedDreams.push({

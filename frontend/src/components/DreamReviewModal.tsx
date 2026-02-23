@@ -10,6 +10,8 @@ interface DreamReviewModalProps {
   dreams: DreamEntry[];
   onSave: (dreams: DreamEntry[]) => void;
   onCancel: () => void;
+  /** Error message from a failed save; shown inside the modal so the user can see it and retry. */
+  saveError?: string;
 }
 
 const CATEGORIES: DreamCategory[] = [
@@ -27,6 +29,7 @@ export function DreamReviewModal({
   dreams,
   onSave,
   onCancel,
+  saveError,
 }: DreamReviewModalProps) {
   const [editableDreams, setEditableDreams] = useState<DreamEntry[]>(dreams);
   const [showConfirmClose, setShowConfirmClose] = useState(false);
@@ -169,6 +172,13 @@ export function DreamReviewModal({
           )}
         </div>
 
+        {saveError && (
+          <div className="px-4 pb-4">
+            <p className="text-red-400 text-sm" role="alert">
+              {saveError}
+            </p>
+          </div>
+        )}
         <div className="p-4 border-t border-border bg-secondary/10 flex justify-end gap-3">
           <button
             onClick={handleCancelAttempt}
