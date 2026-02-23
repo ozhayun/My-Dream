@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { createPortal } from "react-dom";
 import { MessageSquare, Save, Calendar } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { JournalEntry } from "@/types/dream";
+import { DeleteConfirmModal } from "@/components/DeleteConfirmModal";
 
 interface DreamJournalSectionProps {
   journalEntries: JournalEntry[];
@@ -37,9 +37,11 @@ export function DreamJournalSection({
     setEditingEntryId(null);
   };
 
-  const handleDeleteEntry = (id: string) => {
-    onDeleteEntry(id);
-    setDeleteLogEntryId(null);
+  const handleConfirmDeleteEntry = () => {
+    if (deleteLogEntryId) {
+      onDeleteEntry(deleteLogEntryId);
+      setDeleteLogEntryId(null);
+    }
   };
 
   return (
@@ -157,42 +159,15 @@ export function DreamJournalSection({
         )}
       </div>
 
-      {/* Delete Confirmation Modal – portaled so it stays centered in viewport (sticky-center) */}
-      {deleteLogEntryId &&
-        typeof document !== "undefined" &&
-        createPortal(
-          <div
-            className="fixed inset-0 z-9999 flex items-center justify-center p-4"
-            aria-modal="true"
-          >
-            <div
-              className="absolute inset-0 bg-background/80 backdrop-blur-md"
-              onClick={() => setDeleteLogEntryId(null)}
-            />
-            <div className="relative z-10 bg-secondary/20 border border-white/10 rounded-3xl p-8 shadow-2xl backdrop-blur-xl max-w-md w-full">
-              <h3 className="text-xl font-bold mb-2">Delete Log Entry</h3>
-              <p className="text-foreground/70 text-sm mb-8">
-                Are you sure you want to delete this discovery log? This action
-                cannot be undone.
-              </p>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setDeleteLogEntryId(null)}
-                  className="flex-1 px-6 py-3 rounded-2xl bg-white/5 border border-white/10 text-foreground font-semibold hover:bg-white/10 transition-all"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => handleDeleteEntry(deleteLogEntryId)}
-                  className="flex-1 px-6 py-3 rounded-2xl bg-red-500 text-white font-semibold hover:bg-red-600 transition-all shadow-xl shadow-red-500/20"
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          </div>,
-          document.body
-        )}
+      <DeleteConfirmModal
+        isOpen={deleteLogEntryId !== null}
+        title="Delete Log Entry"
+        description="Are you sure you want to delete this discovery log? This action cannot be undone."
+        onConfirm={handleConfirmDeleteEntry}
+        onCancel={() => setDeleteLogEntryId(null)}
+        confirmText="Delete"
+        confirmVariant="danger"
+      />
     </div>
   );
 }

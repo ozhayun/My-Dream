@@ -1,6 +1,8 @@
 import json
+from pathlib import Path
 
-DATA_FILE = "data/dreams.json"
+_BACKEND_ROOT = Path(__file__).resolve().parent
+DATA_FILE = _BACKEND_ROOT / "data" / "dreams.json"
 
 CATEGORY_MAP = {
     "Career": "Career & Business",

@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import StreamingResponse
 from dotenv import load_dotenv
 from typing import List, Optional
+import traceback
 import uuid
 from .models import DreamInput, DreamCollection, DreamEntry, DreamUpdate, SMARTGoal, Milestone
 from .services.analysis_service import analysis_service
@@ -11,6 +12,20 @@ from .services.search_service import search_service
 load_dotenv()
 
 app = FastAPI(title="MyDreams AI Engine")
+
+
+def _log_exception(e: Exception) -> None:
+    """Log exception with traceback for debugging."""
+    print(traceback.format_exc())
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request, exc: Exception):
+    """Log unhandled exceptions and return 500. Re-raise HTTPException so route-level handling is preserved."""
+    if isinstance(exc, HTTPException):
+        raise exc
+    _log_exception(exc)
+    raise HTTPException(status_code=500, detail="An unexpected error occurred.")
 
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -48,8 +63,7 @@ async def analyze_dreams(dream: DreamInput):
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        import traceback
-        print(traceback.format_exc())
+        _log_exception(e)
         raise HTTPException(status_code=500, detail="Unable to analyze dreams. Please try rephrasing your input.")
 
 @app.post("/dreams/{dream_id}/polish", response_model=SMARTGoal)
@@ -67,9 +81,7 @@ async def polish_dream(dream_id: str):
         })
         return smart_data
     except Exception as e:
-        import traceback
-        print(f"Error in polish_dream for ID {dream_id}: {str(e)}")
-        print(traceback.format_exc())
+        _log_exception(e)
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/dreams/{dream_id}/roadmap")
@@ -89,6 +101,7 @@ async def search_dreams(q: str = Query(..., min_length=1)):
         results = search_service.search_dreams(q)
         return results
     except Exception as e:
+        _log_exception(e)
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/dreams/batch", response_model=List[DreamEntry])
@@ -105,8 +118,7 @@ async def save_dreams_batch(dreams: List[DreamEntry]):
         storage_service.save_dreams(dreams_data)
         return [DreamEntry(**d) for d in dreams_data]
     except Exception as e:
-        import traceback
-        print(traceback.format_exc())
+        _log_exception(e)
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/dreams", response_model=List[DreamEntry])
@@ -115,8 +127,7 @@ async def get_dreams():
         data = storage_service.get_all_dreams()
         return data
     except Exception as e:
-        import traceback
-        print(traceback.format_exc())
+        _log_exception(e)
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/dreams/{dream_id}", response_model=DreamEntry)
