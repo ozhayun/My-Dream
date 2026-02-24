@@ -13,6 +13,18 @@ export type DreamCategory =
     | "Lifestyle & Hobbies"
     | "Other";
 
+/** Single source of truth for dream category options (dropdowns, filters). */
+export const DREAM_CATEGORIES: DreamCategory[] = [
+    "Career & Business",
+    "Finance & Wealth",
+    "Health & Wellness",
+    "Relationships & Family",
+    "Travel & Adventure",
+    "Skills & Knowledge",
+    "Lifestyle & Hobbies",
+    "Other",
+];
+
 export interface Milestone {
     id: string;
     title: string;

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { auth } from "@clerk/nextjs/server";
 import { supabase } from "@/lib/supabase";
+import { SUPABASE_DREAMS_TABLE } from "@/lib/supabase-dreams";
 import Groq from "groq-sdk";
 import { Milestone } from "@/types/dream";
 import {
@@ -23,7 +24,7 @@ export async function generateRoadmapAction(dreamId: string) {
 
     // Get dream from Supabase
     const { data: dream, error: fetchError } = await supabase
-      .from("dreams")
+      .from(SUPABASE_DREAMS_TABLE)
       .select("*")
       .eq("id", dreamId)
       .eq("user_id", userId)
@@ -100,7 +101,7 @@ export async function generateRoadmapAction(dreamId: string) {
 
     // Save milestones to Supabase
     const { error: updateError } = await supabase
-      .from("dreams")
+      .from(SUPABASE_DREAMS_TABLE)
       .update({
         milestones: milestones,
       })

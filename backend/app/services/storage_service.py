@@ -1,10 +1,11 @@
 from ..models import DreamEntry
 import json
-import os
 from typing import List, Dict, Any, Optional
 from pathlib import Path
 
-DATA_FILE = Path("data/dreams.json")
+# Resolve path relative to backend root so it works regardless of cwd
+_BACKEND_ROOT = Path(__file__).resolve().parent.parent.parent
+DATA_FILE = _BACKEND_ROOT / "data" / "dreams.json"
 
 class StorageService:
     def __init__(self):

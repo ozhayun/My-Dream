@@ -18,6 +18,7 @@ import {
   DreamSMARTSection,
   DreamJournalSection,
 } from "./components";
+import { generateId } from "@/lib/id";
 
 export function ClientDreamDetail({
   initialDream,
@@ -28,8 +29,8 @@ export function ClientDreamDetail({
   const [isSaving, setIsSaving] = useState(false);
   const [isPolishing, setIsPolishing] = useState(false);
   const [isGeneratingRoadmap, setIsGeneratingRoadmap] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Custom Modal State
   const [isDeleteDreamModalOpen, setIsDeleteDreamModalOpen] = useState(false);
 
   const router = useRouter();
@@ -37,9 +38,12 @@ export function ClientDreamDetail({
   const handleUpdate = async (updates: Partial<DreamEntry>) => {
     setDream((prev) => ({ ...prev, ...updates }));
     setIsSaving(true);
+    setErrorMessage(null);
     try {
       await updateDreamAction(initialDream.id, updates);
-    } catch {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to save changes.";
+      setErrorMessage(message);
     } finally {
       setIsSaving(false);
     }
@@ -67,6 +71,7 @@ export function ClientDreamDetail({
 
   const handlePolish = async () => {
     setIsPolishing(true);
+    setErrorMessage(null);
     try {
       const smartData = await polishDreamAction(dream.id);
       setDream((prev) => ({
@@ -76,7 +81,9 @@ export function ClientDreamDetail({
         title: smartData.polished_title,
       }));
       router.refresh();
-    } catch {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to polish dream.";
+      setErrorMessage(message);
     } finally {
       setIsPolishing(false);
     }
@@ -95,7 +102,7 @@ export function ClientDreamDetail({
     let updatedEntries = dream.journal_entries || [];
     if (isNowCompleted) {
       const entry = {
-        id: Math.random().toString(36).substr(2, 9),
+        id: generateId(),
         content: `🚩 Milestone Achieved: ${milestone.title}`,
         created_at: new Date().toISOString(),
       };
@@ -110,11 +117,14 @@ export function ClientDreamDetail({
 
   const handleGenerateRoadmap = async () => {
     setIsGeneratingRoadmap(true);
+    setErrorMessage(null);
     try {
       const milestones = await generateRoadmapAction(dream.id);
       setDream((prev) => ({ ...prev, milestones }));
       router.refresh();
-    } catch {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to generate roadmap.";
+      setErrorMessage(message);
     } finally {
       setIsGeneratingRoadmap(false);
     }
@@ -122,7 +132,7 @@ export function ClientDreamDetail({
 
   const handleAddJournalEntry = async (content: string) => {
     const entry = {
-      id: Math.random().toString(36).substr(2, 9),
+      id: generateId(),
       content,
       created_at: new Date().toISOString(),
     };
@@ -145,14 +155,34 @@ export function ClientDreamDetail({
   };
 
   const handleDelete = async () => {
+    setErrorMessage(null);
     try {
       await deleteDreamAction(dream.id);
       window.location.href = "/dreams";
-    } catch {}
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to delete dream.";
+      setErrorMessage(message);
+    }
   };
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      {errorMessage && (
+        <div
+          className="rounded-xl border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive flex items-center justify-between gap-3"
+          role="alert"
+        >
+          <span className="flex-1">{errorMessage}</span>
+          <button
+            type="button"
+            onClick={() => setErrorMessage(null)}
+            className="shrink-0 px-2 py-1 rounded-lg hover:bg-destructive/20 transition-colors"
+            aria-label="Dismiss error"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
       <DreamHeader
         isSaving={isSaving}
         onDeleteClick={() => setIsDeleteDreamModalOpen(true)}

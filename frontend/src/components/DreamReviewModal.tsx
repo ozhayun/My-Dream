@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { DreamEntry, DreamCategory } from "@/types/dream";
+import { DreamEntry, DreamCategory, DREAM_CATEGORIES } from "@/types/dream";
 import { Check, Trash2, Calendar, Tag, Type, AlertCircle } from "lucide-react";
 import { clsx } from "clsx";
 import { motion, AnimatePresence } from "framer-motion";
@@ -10,23 +10,15 @@ interface DreamReviewModalProps {
   dreams: DreamEntry[];
   onSave: (dreams: DreamEntry[]) => void;
   onCancel: () => void;
+  /** Error message from a failed save; shown inside the modal so the user can see it and retry. */
+  saveError?: string;
 }
-
-const CATEGORIES: DreamCategory[] = [
-  "Career & Business",
-  "Finance & Wealth",
-  "Health & Wellness",
-  "Relationships & Family",
-  "Travel & Adventure",
-  "Skills & Knowledge",
-  "Lifestyle & Hobbies",
-  "Other",
-];
 
 export function DreamReviewModal({
   dreams,
   onSave,
   onCancel,
+  saveError,
 }: DreamReviewModalProps) {
   const [editableDreams, setEditableDreams] = useState<DreamEntry[]>(dreams);
   const [showConfirmClose, setShowConfirmClose] = useState(false);
@@ -71,7 +63,7 @@ export function DreamReviewModal({
   }, [handleCancelAttempt, showConfirmClose]);
 
   return (
-    <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
       <motion.div
         initial={{ opacity: 0, scale: 0.9, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -128,7 +120,7 @@ export function DreamReviewModal({
                       "w-full bg-background/50 border border-border rounded-md py-2 pl-9 pr-3 text-sm focus:ring-1 focus:ring-primary outline-none appearance-none"
                     )}
                   >
-                    {CATEGORIES.map((cat) => (
+                    {DREAM_CATEGORIES.map((cat) => (
                       <option key={cat} value={cat}>
                         {cat}
                       </option>
@@ -169,6 +161,13 @@ export function DreamReviewModal({
           )}
         </div>
 
+        {saveError && (
+          <div className="px-4 pb-4">
+            <p className="text-red-400 text-sm" role="alert">
+              {saveError}
+            </p>
+          </div>
+        )}
         <div className="p-4 border-t border-border bg-secondary/10 flex justify-end gap-3">
           <button
             onClick={handleCancelAttempt}
@@ -193,7 +192,7 @@ export function DreamReviewModal({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 z-110 flex items-center justify-center p-4 bg-background/90 backdrop-blur-md"
+              className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-background/90 backdrop-blur-md"
             >
               <motion.div
                 initial={{ scale: 0.9, y: 10 }}

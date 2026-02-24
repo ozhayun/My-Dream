@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AlertTriangle, X } from "lucide-react";
 import { clsx } from "clsx";
@@ -24,10 +25,36 @@ export function DeleteConfirmModal({
   confirmText = "Delete",
   confirmVariant = "danger",
 }: DeleteConfirmModalProps) {
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onCancel();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onCancel]);
+
+  useEffect(() => {
+    if (!isOpen || !contentRef.current) return;
+    const focusable = contentRef.current.querySelector<HTMLElement>(
+      'button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    focusable?.focus();
+  }, [isOpen]);
+
   const modalContent = (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="delete-confirm-title"
+        >
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -39,6 +66,7 @@ export function DeleteConfirmModal({
 
           {/* Modal Content */}
           <motion.div
+            ref={contentRef}
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -61,14 +89,16 @@ export function DeleteConfirmModal({
                   <AlertTriangle className="w-6 h-6" />
                 </div>
                 <button
+                  type="button"
                   onClick={onCancel}
                   className="p-2 hover:bg-white/5 rounded-xl transition-colors text-foreground/70 hover:text-foreground"
+                  aria-label="Close"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
-              <h3 className="text-xl font-bold text-foreground mb-2">
+              <h3 id="delete-confirm-title" className="text-xl font-bold text-foreground mb-2">
                 {title}
               </h3>
               <p className="text-foreground/70 text-sm leading-relaxed mb-8 text-pretty">
@@ -77,12 +107,14 @@ export function DeleteConfirmModal({
 
               <div className="flex gap-3 mt-8">
                 <button
+                  type="button"
                   onClick={onCancel}
                   className="flex-1 px-6 py-3 rounded-2xl bg-white/5 border border-white/10 text-foreground font-semibold hover:bg-white/10 transition-all"
                 >
                   Cancel
                 </button>
                 <button
+                  type="button"
                   onClick={onConfirm}
                   className={clsx(
                     "flex-1 px-6 py-3 rounded-2xl font-semibold transition-all shadow-xl",

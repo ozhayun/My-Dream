@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { supabase } from "@/lib/supabase";
+import { SUPABASE_DREAMS_TABLE } from "@/lib/supabase-dreams";
 import Groq from "groq-sdk";
 
 export async function GET(
@@ -17,7 +18,7 @@ export async function GET(
 
         // Get dream from Supabase
         const { data: dream, error } = await supabase
-            .from("dreams")
+            .from(SUPABASE_DREAMS_TABLE)
             .select("*")
             .eq("id", id)
             .eq("user_id", userId)

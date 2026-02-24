@@ -1,8 +1,10 @@
 import json
+from pathlib import Path
 from app.models import DreamEntry
 from pydantic import ValidationError
 
-DATA_FILE = "data/dreams.json"
+_BACKEND_ROOT = Path(__file__).resolve().parent
+DATA_FILE = _BACKEND_ROOT / "data" / "dreams.json"
 
 try:
     with open(DATA_FILE, "r") as f:

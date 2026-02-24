@@ -2,10 +2,12 @@
 node_modules/
 backend/venv/
 backend/__pycache__/
+.pytest_cache/
 .next/
 dist/
 build/
 .DS_Store
+.cursor/
 
 # Environment
 .env
