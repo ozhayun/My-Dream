@@ -1,16 +1,14 @@
 "use server";
 
-import {
-  DreamEntry,
-  DreamCategory,
-  SMARTGoal,
-  Milestone,
-  JournalEntry,
-} from "@/types/dream";
+import { DreamEntry } from "@/types/dream";
 import { revalidatePath } from "next/cache";
 import { auth } from "@clerk/nextjs/server";
 import { supabase } from "@/lib/supabase";
 import { ensureUserExists } from "./helpers";
+import {
+  SUPABASE_DREAMS_TABLE,
+  mapSupabaseRowToDreamEntry,
+} from "@/lib/supabase-dreams";
 
 /** Turn Supabase/network errors into a message the user can act on. */
 function normalizeSupabaseError(message: string, context: "fetch" | "save"): string {
@@ -37,7 +35,7 @@ export async function getDreams() {
     }
 
     const { data, error } = await supabase
-      .from("dreams")
+      .from(SUPABASE_DREAMS_TABLE)
       .select("*")
       .eq("user_id", userId)
       .order("created_at", { ascending: false });
@@ -48,33 +46,7 @@ export async function getDreams() {
       );
     }
 
-    // Transform Supabase data to match DreamEntry interface
-    const dreams: DreamEntry[] = (data || []).map(
-      (dream: {
-        id: string;
-        title: string;
-        category: string;
-        suggested_target_year: number;
-        completed?: boolean;
-        is_polished?: boolean;
-        smart_data?: SMARTGoal;
-        milestones?: Milestone[];
-        journal_entries?: JournalEntry[];
-        notes?: string;
-      }) => ({
-        id: dream.id,
-        title: dream.title,
-        category: dream.category as DreamCategory,
-        suggested_target_year: dream.suggested_target_year,
-        completed: dream.completed || false,
-        is_polished: dream.is_polished || false,
-        smart_data: dream.smart_data || undefined,
-        milestones: dream.milestones || undefined,
-        journal_entries: dream.journal_entries || undefined,
-        notes: dream.notes || undefined,
-      })
-    );
-
+    const dreams: DreamEntry[] = (data || []).map(mapSupabaseRowToDreamEntry);
     return dreams;
   } catch (error) {
     if (error instanceof Error) {
@@ -102,7 +74,7 @@ export async function saveDreamsBatchAction(dreams: DreamEntry[]) {
     const savedDreams = [];
     for (const dream of dreams) {
       const { data, error } = await supabase
-        .from("dreams")
+        .from(SUPABASE_DREAMS_TABLE)
         .insert({
           user_id: userId,
           title: dream.title,
@@ -120,13 +92,7 @@ export async function saveDreamsBatchAction(dreams: DreamEntry[]) {
         );
       }
 
-      savedDreams.push({
-        id: data.id,
-        title: data.title,
-        category: data.category,
-        suggested_target_year: data.suggested_target_year,
-        completed: data.completed || false,
-      });
+      savedDreams.push(mapSupabaseRowToDreamEntry(data));
     }
 
     revalidatePath("/dreams");
@@ -168,7 +134,7 @@ export async function updateDreamAction(
     // If no fields to update, return current dream
     if (Object.keys(updateData).length === 0) {
       const { data: currentDream } = await supabase
-        .from("dreams")
+        .from(SUPABASE_DREAMS_TABLE)
         .select("*")
         .eq("id", dreamId)
         .eq("user_id", userId)
@@ -178,22 +144,11 @@ export async function updateDreamAction(
         throw new Error("Dream not found");
       }
 
-      return {
-        id: currentDream.id,
-        title: currentDream.title,
-        category: currentDream.category,
-        suggested_target_year: currentDream.suggested_target_year,
-        completed: currentDream.completed || false,
-        is_polished: currentDream.is_polished || false,
-        smart_data: currentDream.smart_data || undefined,
-        milestones: currentDream.milestones || undefined,
-        journal_entries: currentDream.journal_entries || undefined,
-        notes: currentDream.notes || undefined,
-      };
+      return mapSupabaseRowToDreamEntry(currentDream);
     }
 
     const { data, error } = await supabase
-      .from("dreams")
+      .from(SUPABASE_DREAMS_TABLE)
       .update(updateData)
       .eq("id", dreamId)
       .eq("user_id", userId)
@@ -209,18 +164,8 @@ export async function updateDreamAction(
     }
 
     revalidatePath("/dreams");
-    return {
-      id: data.id,
-      title: data.title,
-      category: data.category,
-      suggested_target_year: data.suggested_target_year,
-      completed: data.completed || false,
-      is_polished: data.is_polished || false,
-      smart_data: data.smart_data || undefined,
-      milestones: data.milestones || undefined,
-      journal_entries: data.journal_entries || undefined,
-      notes: data.notes || undefined,
-    };
+    revalidatePath(`/dreams/detail/${dreamId}`);
+    return mapSupabaseRowToDreamEntry(data);
   } catch (error) {
     if (error instanceof Error) {
       throw error;
@@ -241,7 +186,7 @@ export async function deleteDreamAction(dreamId: string) {
     }
 
     const { error } = await supabase
-      .from("dreams")
+      .from(SUPABASE_DREAMS_TABLE)
       .delete()
       .eq("id", dreamId)
       .eq("user_id", userId);
@@ -273,7 +218,7 @@ export async function searchDreamsAction(query: string) {
 
     // Simple text search in Supabase (can be enhanced with vector search later)
     const { data, error } = await supabase
-      .from("dreams")
+      .from(SUPABASE_DREAMS_TABLE)
       .select("*")
       .eq("user_id", userId)
       .ilike("title", `%${query}%`)
@@ -283,22 +228,7 @@ export async function searchDreamsAction(query: string) {
       throw new Error(`Search failed: ${error.message}`);
     }
 
-    const dreams: DreamEntry[] = (data || []).map(
-      (dream: {
-        id: string;
-        title: string;
-        category: string;
-        suggested_target_year: number;
-        completed?: boolean;
-      }) => ({
-        id: dream.id,
-        title: dream.title,
-        category: dream.category as DreamCategory,
-        suggested_target_year: dream.suggested_target_year,
-        completed: dream.completed || false,
-      })
-    );
-
+    const dreams: DreamEntry[] = (data || []).map(mapSupabaseRowToDreamEntry);
     return dreams;
   } catch (error) {
     if (error instanceof Error) {

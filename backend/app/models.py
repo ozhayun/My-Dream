@@ -31,17 +31,32 @@ class SMARTGoal(BaseModel):
     time_bound: str = ""
     polished_title: str = ""
 
+# Max lengths aligned with frontend constants (lib/constants.ts)
+DREAM_TITLE_MAX_LENGTH = 500
+JOURNAL_ENTRY_CONTENT_MAX_LENGTH = 10000
+
+
 class JournalEntry(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    content: str
+    content: str = Field(..., max_length=JOURNAL_ENTRY_CONTENT_MAX_LENGTH)
     created_at: str
     updated_at: Optional[str] = None
 
+
 class DreamEntry(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    title: str = Field(description="A concise title for the dream")
+    title: str = Field(
+        ...,
+        max_length=DREAM_TITLE_MAX_LENGTH,
+        description="A concise title for the dream",
+    )
     category: DreamCategory = Field(description="The category this dream best fits into")
-    suggested_target_year: int = Field(description="A realistic four-digit year to achieve this")
+    suggested_target_year: int = Field(
+        ...,
+        ge=2000,
+        le=2100,
+        description="A realistic four-digit year to achieve this",
+    )
     completed: bool = False
     is_polished: bool = False
     smart_data: Optional[SMARTGoal] = None

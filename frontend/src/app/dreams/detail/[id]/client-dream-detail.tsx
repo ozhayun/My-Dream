@@ -169,10 +169,18 @@ export function ClientDreamDetail({
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {errorMessage && (
         <div
-          className="rounded-xl border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+          className="rounded-xl border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive flex items-center justify-between gap-3"
           role="alert"
         >
-          {errorMessage}
+          <span className="flex-1">{errorMessage}</span>
+          <button
+            type="button"
+            onClick={() => setErrorMessage(null)}
+            className="shrink-0 px-2 py-1 rounded-lg hover:bg-destructive/20 transition-colors"
+            aria-label="Dismiss error"
+          >
+            Dismiss
+          </button>
         </div>
       )}
       <DreamHeader

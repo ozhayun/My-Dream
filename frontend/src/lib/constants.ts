@@ -1,3 +1,9 @@
+/** Max length for dream title (aligned with backend). */
+export const DREAM_TITLE_MAX_LENGTH = 500;
+
+/** Max length for journal entry content (aligned with backend). */
+export const JOURNAL_ENTRY_CONTENT_MAX_LENGTH = 10_000;
+
 export const CATEGORY_COLORS: Record<string, string> = {
     "Career & Business": "bg-blue-500/10 text-blue-500 border-blue-500/20",
     "Finance & Wealth": "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",

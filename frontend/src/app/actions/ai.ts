@@ -4,6 +4,7 @@ import { DreamEntry, SMARTGoal, DreamCategory } from "@/types/dream";
 import { revalidatePath } from "next/cache";
 import { auth } from "@clerk/nextjs/server";
 import { supabase } from "@/lib/supabase";
+import { SUPABASE_DREAMS_TABLE } from "@/lib/supabase-dreams";
 import Groq from "groq-sdk";
 import { ensureUserExists } from "./helpers";
 import {
@@ -103,7 +104,7 @@ export async function polishDreamAction(dreamId: string) {
 
     // Get the dream from Supabase
     const { data: dream, error: fetchError } = await supabase
-      .from("dreams")
+      .from(SUPABASE_DREAMS_TABLE)
       .select("*")
       .eq("id", dreamId)
       .eq("user_id", userId)
@@ -151,7 +152,7 @@ export async function polishDreamAction(dreamId: string) {
 
     // Update the dream in Supabase with full SMART data
     const { error: updateError } = await supabase
-      .from("dreams")
+      .from(SUPABASE_DREAMS_TABLE)
       .update({
         title: smartData.polished_title,
         smart_data: smartData,
@@ -252,7 +253,7 @@ export async function saveDream(
 
     // Insert dream into Supabase
     const { data, error } = await supabase
-      .from("dreams")
+      .from(SUPABASE_DREAMS_TABLE)
       .insert({
         user_id: userId,
         title: title,

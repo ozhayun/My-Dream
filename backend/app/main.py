@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import StreamingResponse
 from dotenv import load_dotenv
 from typing import List, Optional
-import traceback
+import logging
 import uuid
 from .models import DreamInput, DreamCollection, DreamEntry, DreamUpdate, SMARTGoal, Milestone
 from .services.analysis_service import analysis_service
@@ -11,12 +11,14 @@ from .services.search_service import search_service
 
 load_dotenv()
 
+logger = logging.getLogger(__name__)
+
 app = FastAPI(title="MyDreams AI Engine")
 
 
 def _log_exception(e: Exception) -> None:
     """Log exception with traceback for debugging."""
-    print(traceback.format_exc())
+    logger.exception("Unhandled exception: %s", e)
 
 
 @app.exception_handler(Exception)
@@ -52,6 +54,12 @@ app.add_middleware(
 @app.get("/")
 async def root():
     return {"message": "MyDreams AI Engine is running"}
+
+
+@app.get("/health")
+async def health():
+    """Health check for load balancers and monitoring. No DB or Ollama dependency."""
+    return {"status": "ok"}
 
 @app.post("/analyze", response_model=DreamCollection)
 async def analyze_dreams(dream: DreamInput):

@@ -5,6 +5,7 @@ import { MessageSquare, Save, Calendar } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { JournalEntry } from "@/types/dream";
 import { DeleteConfirmModal } from "@/components/DeleteConfirmModal";
+import { JOURNAL_ENTRY_CONTENT_MAX_LENGTH } from "@/lib/constants";
 
 interface DreamJournalSectionProps {
   journalEntries: JournalEntry[];
@@ -59,11 +60,16 @@ export function DreamJournalSection({
       <div className="bg-secondary/10 border border-white/5 rounded-2xl p-6 backdrop-blur-sm space-y-4">
         <textarea
           value={newEntry}
+          maxLength={JOURNAL_ENTRY_CONTENT_MAX_LENGTH}
           onChange={(e) => setNewEntry(e.target.value)}
           placeholder="Share a milestone, a thought, or a breakthrough..."
           className="w-full bg-white/5 border border-white/5 rounded-xl p-4 text-sm focus:ring-1 focus:ring-primary/50 outline-none resize-none min-h-[100px] transition-all"
+          aria-describedby="new-entry-count"
         />
-        <div className="flex justify-end">
+        <div className="flex justify-between items-center">
+          <span id="new-entry-count" className="text-xs text-foreground/50">
+            {newEntry.length} / {JOURNAL_ENTRY_CONTENT_MAX_LENGTH}
+          </span>
           <button
             onClick={handleAddEntry}
             disabled={!newEntry.trim() || isSaving}
@@ -138,6 +144,7 @@ export function DreamJournalSection({
               {editingEntryId === entry.id ? (
                 <textarea
                   value={editContent}
+                  maxLength={JOURNAL_ENTRY_CONTENT_MAX_LENGTH}
                   onChange={(e) => setEditContent(e.target.value)}
                   className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-sm outline-none min-h-[100px]"
                 />

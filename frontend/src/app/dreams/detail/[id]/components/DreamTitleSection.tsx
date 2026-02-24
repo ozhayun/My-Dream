@@ -1,20 +1,10 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { DreamEntry, DreamCategory } from "@/types/dream";
+import { DreamEntry, DreamCategory, DREAM_CATEGORIES } from "@/types/dream";
 import { Tag, Calendar, Sparkles, CheckCircle2, Circle } from "lucide-react";
 import { clsx } from "clsx";
-
-const CATEGORIES: DreamCategory[] = [
-  "Career & Business",
-  "Finance & Wealth",
-  "Health & Wellness",
-  "Relationships & Family",
-  "Travel & Adventure",
-  "Skills & Knowledge",
-  "Lifestyle & Hobbies",
-  "Other",
-];
+import { DREAM_TITLE_MAX_LENGTH } from "@/lib/constants";
 
 interface DreamTitleSectionProps {
   dream: DreamEntry;
@@ -79,6 +69,7 @@ export function DreamTitleSection({
         <textarea
           ref={titleTextareaRef}
           value={dream.title}
+          maxLength={DREAM_TITLE_MAX_LENGTH}
           onChange={(e) => {
             onTitleChange(e.target.value);
             // Auto-resize textarea
@@ -97,7 +88,11 @@ export function DreamTitleSection({
           className="w-full bg-transparent border-none text-2xl sm:text-4xl font-bold focus:ring-0 p-0 placeholder:opacity-20 resize-none overflow-hidden min-h-12 leading-tight"
           placeholder="Dream Title"
           rows={1}
+          aria-describedby="dream-title-count"
         />
+        <p id="dream-title-count" className="sr-only">
+          {dream.title.length} / {DREAM_TITLE_MAX_LENGTH} characters
+        </p>
 
         <div className="flex flex-wrap gap-2 sm:gap-4 pt-2">
           <div className="flex items-center gap-2 px-2 sm:px-3 py-1.5 rounded-full bg-white/5 border border-white/5">
@@ -109,7 +104,7 @@ export function DreamTitleSection({
               }
               className="bg-transparent border-none text-xs sm:text-sm focus:ring-0 p-0 cursor-pointer"
             >
-              {CATEGORIES.map((cat) => (
+              {DREAM_CATEGORIES.map((cat) => (
                 <option
                   key={cat}
                   value={cat}
@@ -124,10 +119,14 @@ export function DreamTitleSection({
             <Calendar className="w-3 h-3 sm:w-4 sm:h-4 text-blue-400 shrink-0" />
             <input
               type="number"
+              min={2000}
+              max={2100}
               value={dream.suggested_target_year}
-              onChange={(e) =>
-                onYearChange(parseInt(e.target.value) || 2025)
-              }
+              onChange={(e) => {
+                const raw = parseInt(e.target.value, 10);
+                const year = Number.isNaN(raw) ? new Date().getFullYear() : Math.min(2100, Math.max(2000, raw));
+                onYearChange(year);
+              }}
               className="bg-transparent border-none text-xs sm:text-sm focus:ring-0 p-0 w-12 sm:w-16"
             />
           </div>
